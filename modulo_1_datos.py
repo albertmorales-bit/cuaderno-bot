@@ -91,6 +91,43 @@ class TipoActivo(str, Enum):
 ESQUEMA_OHLCV = ["Open", "High", "Low", "Close", "Volume"]
 
 
+def duracion_intervalo(intervalo: str) -> pd.Timedelta:
+    """Convierte un intervalo de vela ('15m', '1h', '4h', '1d', '1w') a Timedelta.
+
+    Se usa para saber cuándo CIERRA una vela: una vela con marca de tiempo
+    `t` (apertura) cierra en `t + duracion`. Ver `descartar_vela_en_curso`.
+    """
+    unidades = {"m": "min", "h": "h", "d": "D", "w": "W"}
+    intervalo = intervalo.strip().lower()
+    if len(intervalo) < 2 or intervalo[-1] not in unidades or not intervalo[:-1].isdigit():
+        raise ValueError(f"Intervalo no soportado: '{intervalo}'. Usa p. ej. '15m', '1h', '4h', '1d', '1w'.")
+    return pd.Timedelta(int(intervalo[:-1]), unit=unidades[intervalo[-1]])
+
+
+def descartar_vela_en_curso(
+    df: pd.DataFrame, intervalo: str, ahora: Optional[pd.Timestamp] = None
+) -> pd.DataFrame:
+    """Elimina las velas que todavía no han cerrado en el instante `ahora`.
+
+    Auditoría Fase 0 (P7): ccxt (Kraken incluido) y yfinance devuelven como
+    última fila la vela EN CURSO, cuyo Close/High/Low aún van a cambiar.
+    Usarla en un backtest contamina la última barra; usarla en vivo sería
+    lookahead puro (decidir con un cierre que todavía no existe). Las marcas
+    de tiempo de ambas fuentes son de APERTURA de vela, así que una vela está
+    cerrada si `apertura + duracion <= ahora`.
+
+    `ahora` es inyectable para que los tests sean deterministas.
+    """
+    ahora = pd.Timestamp.now(tz="UTC") if ahora is None else pd.Timestamp(ahora)
+    if ahora.tzinfo is None:
+        ahora = ahora.tz_localize("UTC")
+    cerradas = df.index + duracion_intervalo(intervalo) <= ahora
+    n_descartadas = int((~cerradas).sum())
+    if n_descartadas:
+        logger.info("Descartadas %d vela(s) aún en curso (ahora=%s).", n_descartadas, ahora)
+    return df[cerradas]
+
+
 def _parsear_periodo_a_dias(periodo: str) -> int:
     """Convierte cadenas de periodo tipo '1y', '6mo', '90d' a días.
 
@@ -125,6 +162,14 @@ class ParametrosDescarga:
     intervalo: str = "1d"      # "1d" (diario) o "4h" (4 horas), etc.
     periodo: str = "2y"        # Horizonte histórico a descargar (yfinance)
     exchange_id: str = "binance"  # Exchange de ccxt para cripto
+    # Fechas explícitas (UTC). Si se dan, sustituyen a `periodo`: así una
+    # ejecución es reproducible y no depende del día en que se lanza
+    # (auditoría Fase 0, P9). `fecha_fin` es exclusiva.
+    fecha_inicio: Optional[str] = None
+    fecha_fin: Optional[str] = None
+    # Descarta la vela en curso (auditoría Fase 0, P7). Solo debe ponerse a
+    # False en tests que construyan datos a mano.
+    solo_velas_cerradas: bool = True
 
 
 class ProveedorDatos:
@@ -166,15 +211,29 @@ class ProveedorDatos:
         else:  # Defensivo: si en el futuro se añade un TipoActivo nuevo
             raise ValueError(f"TipoActivo no soportado: {params.tipo}")
 
-        return self._validar_y_normalizar(df, params.ticker)
+        df = self._validar_y_normalizar(df, params.ticker)
+        if params.fecha_inicio is not None:
+            df = df[df.index >= pd.Timestamp(params.fecha_inicio, tz="UTC")]
+        if params.fecha_fin is not None:
+            df = df[df.index < pd.Timestamp(params.fecha_fin, tz="UTC")]
+        if params.solo_velas_cerradas:
+            df = descartar_vela_en_curso(df, params.intervalo)
+        if df.empty:
+            raise ValueError(f"'{params.ticker}': no quedan velas en el rango solicitado.")
+        return df
 
     # ------------------------------------------------------------------
     # Fuente 1: Acciones / ETFs vía yfinance
     # ------------------------------------------------------------------
     def _descargar_accion(self, params: ParametrosDescarga) -> pd.DataFrame:
+        rango = (
+            {"start": params.fecha_inicio, "end": params.fecha_fin}
+            if params.fecha_inicio is not None
+            else {"period": params.periodo}
+        )
         df = yf.download(
             tickers=params.ticker,
-            period=params.periodo,
+            **rango,
             interval=params.intervalo,
             auto_adjust=True,   # Ajusta por dividendos/splits: precios comparables.
             progress=False,
@@ -207,11 +266,22 @@ class ProveedorDatos:
         timeframe = params.intervalo
         limite_por_peticion = 1000  # Techo solicitado; cada exchange aplica el suyo propio.
 
-        dias_historial = _parsear_periodo_a_dias(params.periodo)
-        desde_ms = int(
-            (datetime.now(timezone.utc) - timedelta(days=dias_historial)).timestamp() * 1000
-        )
-        ahora_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+        if params.fecha_inicio is not None:
+            inicio = pd.Timestamp(params.fecha_inicio, tz="UTC")
+            fin = (
+                pd.Timestamp(params.fecha_fin, tz="UTC")
+                if params.fecha_fin is not None
+                else pd.Timestamp.now(tz="UTC")
+            )
+            desde_ms = int(inicio.timestamp() * 1000)
+            ahora_ms = int(fin.timestamp() * 1000)
+            dias_historial = (fin - inicio).days
+        else:
+            dias_historial = _parsear_periodo_a_dias(params.periodo)
+            desde_ms = int(
+                (datetime.now(timezone.utc) - timedelta(days=dias_historial)).timestamp() * 1000
+            )
+            ahora_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
 
         velas_acumuladas: list[list] = []
         cursor_ms = desde_ms
@@ -244,6 +314,20 @@ class ProveedorDatos:
             if not lote:
                 break
 
+            if not velas_acumuladas and lote[0][0] > cursor_ms + 7 * 86_400_000:
+                # Auditoría Fase 0 (P1): la API OHLC pública de Kraken solo
+                # devuelve las 720 velas MÁS RECIENTES e ignora `since`. Si el
+                # primer lote empieza más de una semana después de lo pedido,
+                # el histórico va a salir truncado sin ningún error visible.
+                logger.error(
+                    "%s: se pidió histórico desde %s pero '%s' devuelve la primera vela en "
+                    "%s. Este exchange probablemente no sirve histórico antiguo por API "
+                    "(Kraken: máx. 720 velas). El resultado estará TRUNCADO.",
+                    params.ticker,
+                    pd.Timestamp(cursor_ms, unit="ms", tz="UTC"),
+                    self._exchange_id,
+                    pd.Timestamp(lote[0][0], unit="ms", tz="UTC"),
+                )
             velas_acumuladas.extend(lote)
             ultimo_timestamp = lote[-1][0]
 

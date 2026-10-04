@@ -94,6 +94,8 @@ def calcular_gestion_riesgo(
     decimales_unidades: int = 6,
     unidades_fraccionables: bool = True,
     permitir_apalancamiento: bool = False,
+    comision_pct: float = 0.0,
+    tamano_minimo: float = 0.0,
 ) -> ResultadoGestionRiesgo:
     """Calcula stop-loss, take-profit y tamaño de posición para una señal.
 
@@ -136,6 +138,13 @@ def calcular_gestion_riesgo(
         recorta el tamaño calculado por riesgo, se añade una advertencia:
         significa que el stop está tan cerca del precio que el sizing por
         riesgo puro pediría más exposición de la que el capital permite.
+    comision_pct : float
+        Comisión de entrada (fracción del nocional). Se usa en el tope sin
+        apalancamiento: nocional + comisión no puede superar el capital
+        (auditoría Fase 0). 0 por defecto (compatibilidad).
+    tamano_minimo : float
+        Tamaño mínimo de orden del exchange en unidades del activo (p. ej.
+        0.00005 BTC en Kraken). Por debajo, la operación se descarta.
 
     Returns
     -------
@@ -195,7 +204,9 @@ def calcular_gestion_riesgo(
 
     # 5) Redondeo a unidades operativas válidas.
     if unidades_fraccionables:
-        tamano_posicion = round(tamano_posicion, decimales_unidades)
+        # Hacia abajo (no round): redondear hacia arriba superaría el riesgo objetivo.
+        factor = 10 ** decimales_unidades
+        tamano_posicion = math.floor(tamano_posicion * factor) / factor
     else:
         # floor (no round) para no superar nunca el riesgo objetivo.
         tamano_posicion = math.floor(tamano_posicion)
@@ -203,10 +214,10 @@ def calcular_gestion_riesgo(
     # 6) Control de límites: sin apalancamiento, el nocional invertido no
     #    puede superar el capital disponible (comportamiento "spot").
     capital_invertido = tamano_posicion * precio_entrada
-    if not permitir_apalancamiento and capital_invertido > capital_cuenta:
-        tamano_maximo_por_capital = capital_cuenta / precio_entrada
+    if not permitir_apalancamiento and capital_invertido * (1 + comision_pct) > capital_cuenta:
+        tamano_maximo_por_capital = capital_cuenta / (precio_entrada * (1 + comision_pct))
         tamano_posicion = (
-            round(tamano_maximo_por_capital, decimales_unidades)
+            math.floor(tamano_maximo_por_capital * 10 ** decimales_unidades) / 10 ** decimales_unidades
             if unidades_fraccionables
             else math.floor(tamano_maximo_por_capital)
         )
@@ -220,6 +231,15 @@ def calcular_gestion_riesgo(
     # 7) Pérdida máxima teórica real (puede ser menor que capital_arriesgado
     #    si el paso 6 recortó el tamaño).
     perdida_maxima_teorica = tamano_posicion * distancia_stop
+
+    if 0 < tamano_posicion < tamano_minimo:
+        advertencias.append(
+            f"El tamaño {tamano_posicion} es menor que el mínimo de orden del exchange "
+            f"({tamano_minimo}); posición descartada."
+        )
+        tamano_posicion = 0.0
+        capital_invertido = 0.0
+        perdida_maxima_teorica = 0.0
 
     if tamano_posicion <= 0:
         advertencias.append(

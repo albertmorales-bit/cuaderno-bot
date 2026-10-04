@@ -1,8 +1,21 @@
 """
 =============================================================================
- BOT-PREDICT · MÓDULO 2 (v4): Estrategia — entrada por PULLBACK en tendencia
-             (sustituye al disparador de cruce de EMA de la v3) + ATR/RSI
-             + filtro de régimen (EMA200 + ADX)
+ BOT-PREDICT · MÓDULO 2 (v5): Estrategia — ruptura de canal de Donchian
+             (Turtle 20/10) por defecto; PULLBACK (v4) y CRUCE EMA (v3)
+             conservados para comparar + filtros de régimen (EMA200, ADX)
+
+Cambios de la v5 (Fase 0, ver DECISIONES.md)
+--------------------------------------------
+- Nuevo disparador "ruptura_donchian" con canal calculado con shift(1).
+- La señal ya no es un ffill de eventos: `ensamblar_estado` separa salidas
+  de largos y de cortos, y se expone la columna `entrada` (evento filtrado)
+  para que el motor no reabra posición tras un stop sin señal nueva.
+- Calentamiento explícito (`calentamiento_ok`) para que el resultado no
+  dependa de la fecha de inicio de la descarga.
+- Filtro RSI opcional (`usar_filtro_rsi`).
+
+Lo que sigue es la documentación histórica de la v4, que sigue vigente
+para los disparadores "pullback" y "cruce_ema".
 =============================================================================
 
 Objetivo del módulo
@@ -212,8 +225,95 @@ def calcular_distancia_stop_atr(
     return atr * multiplicador
 
 
+Disparador = Literal["pullback", "cruce_ema", "ruptura_donchian"]
+
+
+def calcular_canal_donchian(df: pd.DataFrame, periodo: int) -> tuple[pd.Series, pd.Series]:
+    """Canal de Donchian SIN lookahead: (máximo de High, mínimo de Low) de las
+    `periodo` velas ANTERIORES a la actual.
+
+    El `shift(1)` es la pieza crítica: sin él, el máximo incluiría el High de
+    la propia vela que se está evaluando, y "Close > máximo" no podría darse
+    nunca (o, con High en vez de Close, se daría con información que solo
+    existe al cerrar esa vela). Con `shift(1)`, en la vela `i` el canal solo
+    usa las velas `i-periodo .. i-1`, todas ya cerradas.
+    """
+    alto = df["High"].rolling(periodo, min_periods=periodo).max().shift(1)
+    bajo = df["Low"].rolling(periodo, min_periods=periodo).min().shift(1)
+    return alto, bajo
+
+
+def ensamblar_estado(
+    entrada_larga: np.ndarray,
+    entrada_corta: np.ndarray,
+    salida_larga: np.ndarray,
+    salida_corta: np.ndarray,
+) -> np.ndarray:
+    """Máquina de estados de la señal (1 largo, -1 corto, 0 plano).
+
+    Sustituye al antiguo `ffill` de eventos, que tenía dos fallos (auditoría
+    Fase 0, P4 y P10): mezclaba en una sola serie las salidas de largos y de
+    cortos (una salida de corto podía cerrar un largo) y dependía de
+    `~permitir_cortos` sobre un bool de Python (~False == -1). Aquí cada
+    salida solo afecta a su propia dirección, y una entrada en la vela
+    manda sobre una salida en la misma vela (mismo criterio que la v4).
+
+    Es un bucle de Python a propósito: con unas pocas decenas de miles de
+    velas tarda milisegundos y es trivial de auditar.
+    """
+    n = len(entrada_larga)
+    estado = np.zeros(n, dtype=int)
+    actual = 0
+    for i in range(n):
+        if actual == 1 and salida_larga[i]:
+            actual = 0
+        elif actual == -1 and salida_corta[i]:
+            actual = 0
+        if entrada_larga[i]:
+            actual = 1
+        elif entrada_corta[i]:
+            actual = -1
+        estado[i] = actual
+    return estado
+
+
+def velas_de_calentamiento(
+    disparador_entrada: str,
+    ema_lenta: int,
+    periodo_atr: int,
+    periodo_rsi: int,
+    usar_filtro_macro: bool,
+    periodo_ema_macro: int,
+    usar_adx: bool,
+    periodo_adx: int,
+    periodo_ruptura_entrada: int,
+    factor_calentamiento_ema: float,
+) -> int:
+    """Número de velas iniciales en las que NO se permite entrar.
+
+    Auditoría Fase 0 (P8): una EMA recursiva arrastra el valor de la primera
+    vela descargada con peso (1 - alpha)^k. Con EMA200 y k=200 ese peso es
+    ~13 %: el filtro dependería de la fecha en que empieza la descarga, y el
+    motor en vivo (otra ventana) no reproduciría el backtest. Con
+    `factor_calentamiento_ema=2` el peso residual baja a ~1,8 %; con 3, a
+    ~0,25 %. Los indicadores de ventana finita (Donchian) solo necesitan su
+    propia ventana.
+    """
+    periodos_ema = [periodo_atr, periodo_rsi]
+    if disparador_entrada in ("pullback", "cruce_ema"):
+        periodos_ema.append(ema_lenta)
+    if usar_filtro_macro:
+        periodos_ema.append(periodo_ema_macro)
+    if usar_adx:
+        periodos_ema.append(2 * periodo_adx)
+    calentamiento = int(np.ceil(factor_calentamiento_ema * max(periodos_ema)))
+    if disparador_entrada == "ruptura_donchian":
+        calentamiento = max(calentamiento, periodo_ruptura_entrada + 1)
+    return calentamiento
+
+
 # -----------------------------------------------------------------------
-# Generador de señales: función única, parametrizada y vectorizada.
+# Generador de señales: función única, parametrizada.
 # -----------------------------------------------------------------------
 
 def generar_senales(
@@ -235,212 +335,183 @@ def generar_senales(
     usar_adx: bool = True,
     periodo_adx: int = 14,
     umbral_adx: float = 22.0,
-    disparador_entrada: Literal["pullback", "cruce_ema"] = "pullback",
+    disparador_entrada: Disparador = "pullback",
+    periodo_ruptura_entrada: int = 20,
+    periodo_ruptura_salida: int = 10,
+    usar_filtro_rsi: bool = True,
+    factor_calentamiento_ema: float = 2.0,
 ) -> pd.DataFrame:
-    """Genera indicadores y señales de trading, con filtro de régimen.
+    """Genera indicadores, eventos de entrada y la señal de estado.
 
     Parameters
     ----------
     df : pd.DataFrame
-        DataFrame con columnas ``Open, High, Low, Close, Volume`` (esquema
-        estandarizado del Módulo 1) e índice temporal ordenado.
+        Columnas ``Open, High, Low, Close, Volume`` (esquema del Módulo 1) e
+        índice temporal ordenado. Solo velas CERRADAS.
     ema_rapida, ema_lenta : int
-        Periodos de las EMA que definen la estructura de tendencia. 20/50
-        por defecto (ver docstring del módulo). Con
-        `disparador_entrada="pullback"` actúan como un ESTADO (¿sigue la
-        tendencia intacta?), no como el evento que dispara la entrada.
+        EMAs de estructura (disparadores "pullback" y "cruce_ema").
     periodo_atr, periodo_rsi : int
-        Ventanas de cálculo del ATR y el RSI.
-    rsi_sobrecompra, rsi_sobreventa : float
-        Umbrales que BLOQUEAN una nueva entrada por sobrecompra/sobreventa.
-    rsi_agotamiento_largo, rsi_agotamiento_corto : float
-        Umbrales que FUERZAN el cierre de una posición abierta.
+        Ventanas del ATR (stop) y del RSI (filtro opcional).
+    rsi_sobrecompra, rsi_sobreventa, rsi_agotamiento_largo, rsi_agotamiento_corto : float
+        Umbrales del filtro RSI; solo actúan si `usar_filtro_rsi=True`.
     atr_pct_minimo : float
-        ATR mínimo (como fracción del precio) para permitir operar.
+        ATR mínimo (fracción del precio) para permitir una entrada.
     permitir_cortos : bool
-        Si True, genera también señales en corto (-1). **Por defecto
-        False** en esta versión: la prueba de estrés post-auditoría aísla
-        la rentabilidad del lado comprador, dado que los cortos
-        concentraron la mayoría de las pérdidas en la v2.
+        Genera también señales en corto (-1). False por defecto.
     atr_mult_stop_largo, atr_mult_stop_corto : float
         Multiplicadores de ATR para la distancia de stop-loss base.
-    usar_filtro_macro : bool
-        Activa el filtro de tendencia macro (régimen nº 1). Si False, se
-        ignora `periodo_ema_macro` por completo (útil para comparar
-        con/sin filtro sin recurrir a valores de periodo artificiales).
-    periodo_ema_macro : int
-        Periodo de la EMA de tendencia de fondo (filtro de régimen nº 1).
-        Una entrada larga solo es válida con Close > EMA_macro; una corta,
-        solo con Close < EMA_macro. 200 por defecto.
-    usar_adx : bool
-        Activa el filtro de fuerza direccional (régimen nº 2). Si False,
-        se ignora el ADX por completo (útil para comparar con/sin filtro).
-    periodo_adx : int
-        Ventana de cálculo del ADX (suavizado de Wilder doble).
-    umbral_adx : float
-        ADX mínimo para aceptar una entrada. Por debajo de este umbral se
-        interpreta que el mercado no tiene una tendencia lo bastante
-        definida como para operar con confianza.
-    disparador_entrada : "pullback" | "cruce_ema"
-        Mecanismo que dispara la entrada (ver docstring del módulo para el
-        razonamiento completo):
-        - "pullback" (v4, por defecto): entra cuando el precio "reclama"
-          la EMA rápida (cierre vuelve a superarla tras haber estado
-          debajo) MIENTRAS la estructura `ema_rapida`/`ema_lenta` sigue
-          alineada con la tendencia. El cruce EMA-EMA pasa a ser señal de
-          SALIDA por ruptura de estructura, no de entrada.
-        - "cruce_ema" (v3, conservado para comparación A/B): comportamiento
-          idéntico a la versión anterior — entra en el instante exacto en
-          que `ema_rapida` cruza a `ema_lenta`.
-        En ambos casos los filtros de régimen (macro + ADX) y de calidad
-        (RSI + volatilidad) se aplican igual, solo a las entradas.
+    usar_filtro_macro, periodo_ema_macro : bool, int
+        Filtro de tendencia de fondo: largos solo con Close > EMA_macro.
+    usar_adx, periodo_adx, umbral_adx : bool, int, float
+        Filtro de fuerza de tendencia: entradas solo con ADX >= umbral.
+    disparador_entrada : "pullback" | "cruce_ema" | "ruptura_donchian"
+        - "pullback" (v4): el cierre reclama la EMA rápida dentro de la
+          estructura EMA rápida/lenta. Sale por cruce EMA en contra.
+        - "cruce_ema" (v3): entra en el cruce EMA rápida/lenta. Sale por
+          cruce en contra.
+        - "ruptura_donchian" (v5): entra cuando el CIERRE supera el máximo
+          de las `periodo_ruptura_entrada` velas anteriores (sistema Turtle
+          clásico, 20). Sale cuando el cierre pierde el mínimo de las
+          `periodo_ruptura_salida` velas anteriores (10). Se usa el cierre
+          (no un toque intravela) para que la señal se confirme con la vela
+          cerrada y se ejecute en la apertura siguiente.
+    periodo_ruptura_entrada, periodo_ruptura_salida : int
+        Ventanas del canal de Donchian de entrada y de salida.
+    usar_filtro_rsi : bool
+        Si True (comportamiento v3/v4), bloquea entradas en sobrecompra /
+        sobreventa y fuerza salidas por agotamiento. En una ruptura el RSI
+        suele estar alto por definición, así que la v5 lo desactiva.
+    factor_calentamiento_ema : float
+        Ver `velas_de_calentamiento`.
 
     Returns
     -------
     pd.DataFrame
-        Copia de `df` con las columnas de indicadores añadidas (incluye
-        `ema_macro` y, si `usar_adx=True`, `adx`) y una columna final
-        `senal` (1 / -1 / 0).
+        Copia de `df` con indicadores y, además:
+        - ``evento_entrada_largo``: evento bruto de entrada larga, sin filtros
+          (para el diagnóstico de embudo de `main.py`).
+        - ``entrada``: evento de entrada YA filtrado (1 / -1 / 0). El motor de
+          backtest solo abre posición con este evento, nunca con el estado:
+          así no se reabre tras un stop sin una señal nueva (auditoría P4).
+        - ``senal``: estado sostenido (1 / -1 / 0) para cerrar por señal.
+        - ``calentamiento_ok``: False en las velas de calentamiento.
     """
+    if disparador_entrada not in ("pullback", "cruce_ema", "ruptura_donchian"):
+        raise ValueError(
+            "disparador_entrada debe ser 'pullback', 'cruce_ema' o 'ruptura_donchian', "
+            f"recibido: '{disparador_entrada}'."
+        )
     df = df.copy()
+    indice = df.index
 
-    # 1) Indicadores base (idénticos a la v2).
+    # 1) Indicadores base. Todos son causales (EMA recursiva, diff, shift).
     df["ema_rapida"] = calcular_ema(df["Close"], ema_rapida)
     df["ema_lenta"] = calcular_ema(df["Close"], ema_lenta)
     df["atr"] = calcular_atr(df, periodo_atr)
     df["atr_pct"] = df["atr"] / df["Close"]
     df["rsi"] = calcular_rsi(df["Close"], periodo_rsi)
 
-    # 1b) Indicadores de RÉGIMEN (nuevos en esta versión).
+    n_calentamiento = velas_de_calentamiento(
+        disparador_entrada, ema_lenta, periodo_atr, periodo_rsi, usar_filtro_macro,
+        periodo_ema_macro, usar_adx, periodo_adx, periodo_ruptura_entrada,
+        factor_calentamiento_ema,
+    )
+    calentamiento_ok = pd.Series(np.arange(len(df)) >= n_calentamiento, index=indice)
+    df["calentamiento_ok"] = calentamiento_ok
+
+    # 2) Filtros de régimen (solo sobre ENTRADAS).
+    verdadero = pd.Series(True, index=indice)
     if usar_filtro_macro:
         df["ema_macro"] = calcular_ema(df["Close"], periodo_ema_macro)
-        # Enmascarado EXPLÍCITO del periodo de calentamiento: aunque
-        # `.ewm()` produce un valor desde la primera vela (no NaN "de
-        # fábrica"), una EMA de 200 periodos calculada sobre menos de 200
-        # velas no es estadísticamente lo que dice ser -> la anulamos a
-        # propósito durante las primeras `periodo_ema_macro` velas, para
-        # que el filtro de tendencia macro NUNCA autorice una entrada con
-        # datos insuficientes (una comparación contra NaN se evalúa como
-        # False, así que estas velas quedan automáticamente excluidas).
-        df.loc[df.index[:periodo_ema_macro], "ema_macro"] = np.nan
-
+        filtro_macro_largo = df["Close"] > df["ema_macro"]
+        filtro_macro_corto = df["Close"] < df["ema_macro"]
+    else:
+        filtro_macro_largo = filtro_macro_corto = verdadero
     if usar_adx:
         df["adx"] = calcular_adx(df, periodo_adx)
-        # El ADX encadena dos suavizados de Wilder (DM/TR, y DX->ADX): su
-        # calentamiento fiable requiere más velas que un solo suavizado.
-        # Enmascaramos el doble del periodo, mismo criterio explícito que
-        # con la EMA macro.
-        velas_calentamiento_adx = periodo_adx * 2
-        df.loc[df.index[:velas_calentamiento_adx], "adx"] = np.nan
         filtro_adx = df["adx"] >= umbral_adx
     else:
-        filtro_adx = pd.Series(True, index=df.index)
+        filtro_adx = verdadero
 
-    # 2) Estructura de tendencia (estado sostenido) + eventos de cruce
-    #    EMA-EMA. En "pullback" (v4), la estructura filtra la entrada y el
-    #    cruce se usa como salida por ruptura; en "cruce_ema" (v3), el
-    #    cruce se usa directamente como disparador de entrada.
+    # 3) Eventos de entrada brutos y salidas propias de cada disparador.
     estructura_alcista = df["ema_rapida"] > df["ema_lenta"]
     estructura_bajista = df["ema_rapida"] < df["ema_lenta"]
-    cruce_alcista = estructura_alcista & (
-        df["ema_rapida"].shift(1) <= df["ema_lenta"].shift(1)
-    )
-    cruce_bajista = estructura_bajista & (
-        df["ema_rapida"].shift(1) >= df["ema_lenta"].shift(1)
-    )
-
-    # 2b) Evento de "reclamo" de la EMA rápida (disparador de la v4): el
-    #     cierre vuelve a superarla (o a perderla, para cortos) tras haber
-    #     estado al otro lado en la vela anterior — la firma de un
-    #     retroceso ("pullback") que se resuelve a favor de la tendencia.
-    reclamo_alcista = (df["Close"] > df["ema_rapida"]) & (
-        df["Close"].shift(1) <= df["ema_rapida"].shift(1)
-    )
-    reclamo_bajista = (df["Close"] < df["ema_rapida"]) & (
-        df["Close"].shift(1) >= df["ema_rapida"].shift(1)
-    )
+    cruce_alcista = estructura_alcista & (df["ema_rapida"].shift(1) <= df["ema_lenta"].shift(1))
+    cruce_bajista = estructura_bajista & (df["ema_rapida"].shift(1) >= df["ema_lenta"].shift(1))
 
     if disparador_entrada == "pullback":
-        evento_entrada_largo = reclamo_alcista & estructura_alcista
-        evento_entrada_corto = reclamo_bajista & estructura_bajista
-    elif disparador_entrada == "cruce_ema":
-        evento_entrada_largo = cruce_alcista
-        evento_entrada_corto = cruce_bajista
-    else:
-        raise ValueError(
-            f"disparador_entrada debe ser 'pullback' o 'cruce_ema', recibido: "
-            f"'{disparador_entrada}'."
+        reclamo_alcista = (df["Close"] > df["ema_rapida"]) & (
+            df["Close"].shift(1) <= df["ema_rapida"].shift(1)
         )
+        reclamo_bajista = (df["Close"] < df["ema_rapida"]) & (
+            df["Close"].shift(1) >= df["ema_rapida"].shift(1)
+        )
+        evento_largo = reclamo_alcista & estructura_alcista
+        evento_corto = reclamo_bajista & estructura_bajista
+        salida_larga = cruce_bajista
+        salida_corta = cruce_alcista
+    elif disparador_entrada == "cruce_ema":
+        evento_largo = cruce_alcista
+        evento_corto = cruce_bajista
+        salida_larga = cruce_bajista
+        salida_corta = cruce_alcista
+    else:  # ruptura_donchian
+        alto_entrada, bajo_entrada = calcular_canal_donchian(df, periodo_ruptura_entrada)
+        alto_salida, bajo_salida = calcular_canal_donchian(df, periodo_ruptura_salida)
+        df["donchian_alto_entrada"] = alto_entrada
+        df["donchian_bajo_entrada"] = bajo_entrada
+        df["donchian_alto_salida"] = alto_salida
+        df["donchian_bajo_salida"] = bajo_salida
+        # Comparaciones contra NaN (inicio del canal) dan False: no hay evento.
+        evento_largo = df["Close"] > alto_entrada
+        evento_corto = df["Close"] < bajo_entrada
+        salida_larga = df["Close"] < bajo_salida
+        salida_corta = df["Close"] > alto_salida
 
-    # 3) Filtros de calidad sobre las entradas (RSI + volatilidad, v2).
+    # 4) Filtros de calidad (opcionales) y salidas por agotamiento de RSI.
     filtro_volatilidad = df["atr_pct"] >= atr_pct_minimo
-    filtro_rsi_largo = df["rsi"] < rsi_sobrecompra
-    filtro_rsi_corto = df["rsi"] > rsi_sobreventa
-
-    # 3b) Filtros de RÉGIMEN: tendencia macro + fuerza direccional.
-    # Comparaciones con NaN (periodo de calentamiento) se evalúan como
-    # False en pandas -> no autorizan entrada, sin necesidad de lógica
-    # adicional.
-    if usar_filtro_macro:
-        filtro_tendencia_macro_largo = df["Close"] > df["ema_macro"]
-        filtro_tendencia_macro_corto = df["Close"] < df["ema_macro"]
+    if usar_filtro_rsi:
+        filtro_rsi_largo = df["rsi"] < rsi_sobrecompra
+        filtro_rsi_corto = df["rsi"] > rsi_sobreventa
+        salida_larga = salida_larga | (
+            (df["rsi"] > rsi_agotamiento_largo) & (df["rsi"].shift(1) <= rsi_agotamiento_largo)
+        )
+        salida_corta = salida_corta | (
+            (df["rsi"] < rsi_agotamiento_corto) & (df["rsi"].shift(1) >= rsi_agotamiento_corto)
+        )
     else:
-        filtro_tendencia_macro_largo = pd.Series(True, index=df.index)
-        filtro_tendencia_macro_corto = pd.Series(True, index=df.index)
+        filtro_rsi_largo = filtro_rsi_corto = verdadero
 
     entrada_larga = (
-        evento_entrada_largo
-        & filtro_rsi_largo
-        & filtro_volatilidad
-        & filtro_tendencia_macro_largo
-        & filtro_adx
+        evento_largo & filtro_rsi_largo & filtro_volatilidad & filtro_macro_largo
+        & filtro_adx & calentamiento_ok
     )
     entrada_corta = (
-        permitir_cortos
-        & evento_entrada_corto
-        & filtro_rsi_corto
-        & filtro_volatilidad
-        & filtro_tendencia_macro_corto
-        & filtro_adx
+        evento_corto & filtro_rsi_corto & filtro_volatilidad & filtro_macro_corto
+        & filtro_adx & calentamiento_ok
+    )
+    if not permitir_cortos:
+        entrada_corta = pd.Series(False, index=indice)
+
+    # 5) Columnas de salida: evento bruto, evento filtrado y estado.
+    df["evento_entrada_largo"] = evento_largo.fillna(False).astype(bool)
+    df["entrada"] = np.where(entrada_larga, 1, np.where(entrada_corta, -1, 0))
+    df["senal"] = ensamblar_estado(
+        entrada_larga.to_numpy(dtype=bool),
+        entrada_corta.to_numpy(dtype=bool),
+        salida_larga.fillna(False).to_numpy(dtype=bool),
+        salida_corta.fillna(False).to_numpy(dtype=bool),
     )
 
-    # 4) Eventos de salida forzada. La ruptura de ESTRUCTURA (cruce EMA-EMA
-    #    en contra de la posición) cierra siempre, sea cual sea el
-    #    disparador de entrada usado — si la tendencia que sostenía la
-    #    entrada ya no existe, la razón para seguir dentro tampoco.
-    #    El agotamiento por RSI es idéntico a la v3: el filtro de régimen
-    #    aplica solo a la decisión de ENTRAR, nunca a la de salir -> una
-    #    vez dentro, la gestión de riesgo manda.
-    salida_larga_rsi = (df["rsi"] > rsi_agotamiento_largo) & (
-        df["rsi"].shift(1) <= rsi_agotamiento_largo
-    )
-    salida_corta_rsi = (df["rsi"] < rsi_agotamiento_corto) & (
-        df["rsi"].shift(1) >= rsi_agotamiento_corto
-    )
-
-    # 5) Ensamblado vectorizado de la señal como estado sostenido (ffill
-    #    de eventos), igual que en versiones anteriores.
-    senal_bruta = pd.Series(np.nan, index=df.index)
-    senal_bruta.loc[salida_larga_rsi] = 0
-    senal_bruta.loc[salida_corta_rsi] = 0
-    senal_bruta.loc[cruce_bajista & ~permitir_cortos] = 0  # sin cortos: solo cerrar largo
-    senal_bruta.loc[entrada_larga] = 1
-    senal_bruta.loc[entrada_corta] = -1
-
-    df["senal"] = senal_bruta.ffill().fillna(0).astype(int)
-
-    # 6) Distancia de stop-loss base (asimétrica), previsualización del
-    #    Módulo 3.
+    # 6) Distancia de stop-loss base (asimétrica), previsualización del Módulo 3.
     df["distancia_stop_atr"] = calcular_distancia_stop_atr(
         df["atr"], df["senal"], atr_mult_stop_largo, atr_mult_stop_corto
     )
 
     logger.info(
-        "Señales generadas (con filtro de régimen): %d velas largas, "
-        "%d cortas, %d planas.",
-        (df["senal"] == 1).sum(),
-        (df["senal"] == -1).sum(),
-        (df["senal"] == 0).sum(),
+        "Señales (%s): %d entradas largas, %d cortas | %d velas de calentamiento.",
+        disparador_entrada, int((df["entrada"] == 1).sum()),
+        int((df["entrada"] == -1).sum()), n_calentamiento,
     )
     return df
 
