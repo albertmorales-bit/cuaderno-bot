@@ -21,9 +21,10 @@ Estado del proyecto: ver [`ESTADO.md`](ESTADO.md). Decisiones y su motivo:
 | `modulo_4_backtesting.py` | Motor vela a vela, costes, métricas, partición con embargo, exportación CSV |
 | `modulo_4b_exposicion.py` | Motor por exposición objetivo (0-1) con banda de reajuste; benchmarks con los mismos costes |
 | `modulo_5_regimenes.py` | Regímenes causales (tendencia, volatilidad, fuerza), atribución y bootstrap por bloques |
+| `modulo_6_validacion.py` | Ventanas que arrancan sin posición, benchmarks, bootstrap, Sharpe deflactado, actividad esperada |
 | `main.py` | `Configuracion` central y orquestación (uno o varios activos, diagnóstico) |
 | `validacion/` | `significancia.py` y `pbo.py` (Auditor Anti-Overfitting), sin modificar |
-| `scripts/` | `construir_datos.py`, `informe_datos.py` y `fase2_regimenes.py` |
+| `scripts/` | `construir_datos.py`, `informe_datos.py`, `fase2_regimenes.py`, `fase4_desarrollo.py` y `fase4_validacion.py` |
 | `informes/` | Criterios fijados antes de cada análisis y sus resultados |
 | `datos/` | Datos congelados por versión: CSV crudos por fuente, serie limpia, `MANIFIESTO.json`, `CALIDAD.md` |
 | `tests/` | pytest, sin red |

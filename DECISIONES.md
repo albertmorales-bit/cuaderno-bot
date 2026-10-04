@@ -181,3 +181,22 @@ los criterios pre-registrados, la Fase 3 queda JUSTIFICADA: (A) se cumple en
 volatilidad (alta < baja) y en fuerza (fuerte > débil). (B) no se cumple en
 ningún régimen. Parte del efecto (A) es mecánica (más exposición en baja
 volatilidad y en tendencia fuerte). Cómo seguir: decisión del usuario.
+
+## Fase 4 (2026-10-04)
+
+**D-027 · Sin Fase 3.** El usuario eligió seguir con la recomendación (c):
+pasar a la Fase 4 con la V8, sin segunda estrategia ni router. El contador de
+variantes se queda en 8.
+
+**D-028 · Criterios de aceptación v1** (`informes/fase4/CRITERIOS_ACEPTACION.md`),
+commiteados antes de ejecutar nada de la Fase 4. Unidad de evaluación: cartera
+50/50 en rentabilidades diarias (no operaciones: habrá menos de 30). Siete
+condiciones (rentabilidad, caída, Sharpe frente a los dos benchmarks,
+coherencia por activo, costes x2, meseta, regímenes) y dos pruebas
+estadísticas (Sharpe deflactado y bootstrap emparejado) que separan APTO de
+APTO CON RESERVAS. "Walk-forward": como ningún parámetro se ajusta con datos,
+no hay nada que reajustar por ventanas; se evalúan ventanas anuales
+independientes en desarrollo y la validación de una sola vez.
+
+**D-029 · El test de repetición (backtest = vivo) pasa a la Fase 5**, donde se
+construye el motor en vivo. Será condición para arrancar el día 1.
