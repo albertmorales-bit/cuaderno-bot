@@ -22,9 +22,13 @@ Estado del proyecto: ver [`ESTADO.md`](ESTADO.md). Decisiones y su motivo:
 | `modulo_4b_exposicion.py` | Motor por exposición objetivo (0-1) con banda de reajuste; benchmarks con los mismos costes |
 | `modulo_5_regimenes.py` | Regímenes causales (tendencia, volatilidad, fuerza), atribución y bootstrap por bloques |
 | `modulo_6_validacion.py` | Ventanas que arrancan sin posición, benchmarks, bootstrap, Sharpe deflactado, actividad esperada |
+| `modulo_7_registro.py` | Registro JSONL encadenado con SHA-256, verificable sin re-serializar |
+| `modulo_8_vivo.py` | Motor de paper trading en vivo (mismo código que el backtest), idempotente |
 | `main.py` | `Configuracion` central y orquestación (uno o varios activos, diagnóstico) |
 | `validacion/` | `significancia.py` y `pbo.py` (Auditor Anti-Overfitting), sin modificar |
-| `scripts/` | `construir_datos.py`, `informe_datos.py`, `fase2_regimenes.py`, `fase4_desarrollo.py` y `fase4_validacion.py` |
+| `scripts/` | Datos, análisis de las fases 2 y 4, `ejecutar_diario.py`, `commit_firmado.py`, `sellar_hash.py`, `preregistro.py` |
+| `.github/workflows/diario.yml` | Ejecución diaria en GitHub Actions |
+| `vivo/` | Archivo de velas, registro encadenado y sellos del experimento (lo escribe el bot) |
 | `informes/` | Criterios fijados antes de cada análisis y sus resultados |
 | `datos/` | Datos congelados por versión: CSV crudos por fuente, serie limpia, `MANIFIESTO.json`, `CALIDAD.md` |
 | `tests/` | pytest, sin red |
@@ -48,3 +52,5 @@ construir una versión nueva desde las APIs públicas:
 .venv\Scripts\python scripts\construir_datos.py --version v2 --fin 2027-01-01
 .venv\Scripts\python scripts\informe_datos.py --version v2
 ```
+
+Publicar y arrancar: [`GUIA_PUBLICACION.md`](GUIA_PUBLICACION.md).

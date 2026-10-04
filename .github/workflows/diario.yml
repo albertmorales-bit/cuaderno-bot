@@ -1,0 +1,58 @@
+# Paper trading diario (dinero ficticio). Un solo workflow que ejecuta el bot,
+# sella el hash del día y hace el commit firmado vía API: no depende de que un
+# commit con GITHUB_TOKEN dispare otro workflow (no lo haría; ver la
+# documentación de GitHub sobre GITHUB_TOKEN).
+#
+# - Cron a las 00:17 UTC (minuto "raro" para evitar el pico de las horas en
+#   punto) y segundo intento a las 02:47 UTC por si el primero se retrasa o se
+#   pierde. El motor es idempotente: el reintento nunca duplica operaciones.
+# - Los commits diarios mantienen el repositorio activo: los cron de un
+#   repositorio público se desactivan tras 60 días sin actividad.
+# - La web (GitHub Pages) se despliega desde este mismo workflow (Fase 7):
+#   los pushes hechos con GITHUB_TOKEN no disparan builds de Pages.
+name: Paper trading diario
+
+on:
+  schedule:
+    - cron: "17 0 * * *"
+    - cron: "47 2 * * *"
+  workflow_dispatch:
+    inputs:
+      inicializar:
+        description: "Día 0: crear el archivo de velas y el evento de inicio (UNA sola vez)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paper-trading
+  cancel-in-progress: false
+
+jobs:
+  diario:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.10"
+          cache: pip
+      - name: Dependencias (versiones fijadas)
+        run: pip install -r requirements.txt opentimestamps-client==0.7.2
+      - name: Día 0 (inicialización)
+        if: ${{ inputs.inicializar }}
+        run: python scripts/ejecutar_diario.py --inicializar
+      - name: Ejecución diaria
+        if: ${{ !inputs.inicializar }}
+        run: python scripts/ejecutar_diario.py
+      - name: Sello OpenTimestamps del hash del día
+        if: ${{ !inputs.inicializar }}
+        continue-on-error: true
+        run: python scripts/sellar_hash.py
+      - name: Commit firmado vía API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/commit_firmado.py

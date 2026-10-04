@@ -40,6 +40,16 @@ Bot de trading cripto en **paper trading** público durante 90 días para la ser
   Sin enlaces en el tuit principal. Siempre la nota "dinero ficticio, no es
   asesoramiento financiero, resultados pasados no garantizan nada".
 
+## Experimento en vivo
+
+- `vivo/` solo lo escribe el bot. Nunca editar `vivo/registro.jsonl` a mano: la
+  cadena de hashes lo detectaría y el motor se detendría.
+- La configuración está congelada desde el día 0: cambiar `Configuracion` o
+  `ReglasSeguridad` bloquea el motor. Un cambio exige una versión nueva del
+  experimento, con el contador a cero, y anuncio público.
+- `scripts/fase4_validacion.py` ya se ejecutó (candado). El tramo de reserva
+  sigue cerrado.
+
 ## Comprobar antes de entregar
 
 ```powershell

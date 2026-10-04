@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 4 · veredicto NO APTO.
+Última actualización: 2026-10-04, fin de la Fase 5 (motor en vivo listo; experimento sin arrancar).
 
 ## Hecho
 
@@ -53,6 +53,13 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
   Gana dinero y recorta la caída a un tercio, pero no bate a tener un ~30 % fijo
   (C4 falla en BTC; DSR 0,24). Reserva final sin abrir (D-030).
 
+- **Fase 5 · Motor en vivo.** Registro encadenado, motor idempotente con el mismo
+  código que el backtest, test de repetición con igualdad exacta, reglas de
+  seguridad y de parada, generador del pre-registro (con tuit verificado con
+  `len()`), workflow de GitHub Actions con commit firmado vía API y sello
+  OpenTimestamps, y `GUIA_PUBLICACION.md`. 95 tests. Probado contra Kraken real
+  en un directorio temporal. D-031 a D-036.
+
 ### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
@@ -63,19 +70,20 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Decidir cómo seguir tras el NO APTO; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
+- Fase 6 (salidas diarias para X), Fase 7 (web de transparencia), pre-registro y día 0; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
   uno nuevo que use los `.py` del repositorio.
 
 ## Decisiones abiertas (del usuario)
 
-1. Cómo seguir tras el NO APTO (D-030): paper trading igualmente, etiquetado como NO APTO y comparado en vivo con el ~30 % fijo; rediseñar (versión nueva, con solo la reserva y el directo como fuera de muestra); o cerrar la serie con "probamos esto y no funcionó".
-2. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
+1. Pasos de `GUIA_PUBLICACION.md` (email noreply, clave de firma, repositorio, rulesets).
+2. Reserva final (2024-07 → 2026-05): mantenerla cerrada o abrirla antes del día 1 como evidencia adicional publicada.
+3. Visto bueno a las reglas de seguridad (D-034) y al riesgo de entrada del día 1.
 
 Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
-taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01), V8 (D-023),
-sin Fase 3 (D-027), criterios v1 (D-028).
+taker 0,80 %, tramos de `VALIDACION.md`, V8 (D-023), sin Fase 3 (D-027),
+criterios v1 (D-028), paper trading con V8 NO APTO y FIJO30 (D-031).
 
 ## Cómo retomar
 

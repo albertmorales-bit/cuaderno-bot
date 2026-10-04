@@ -205,3 +205,43 @@ construye el motor en vivo. Será condición para arrancar el día 1.
 apertura e594140). Falla C4 (coherencia por activo: en BTC no bate a comprar y
 mantener con la misma exposición). No se modifica ningún criterio ni parámetro
 a posteriori. La reserva final sigue cerrada. Cómo seguir: decisión del usuario.
+
+## Fase 5 (2026-10-04)
+
+**D-031 · Paper trading con la V8 etiquetada NO APTO** (decisión del usuario)
+y una cartera de comparación FIJO30 (30 % fijo en cada activo, mismos costes y
+banda). No se cambia nada de la estrategia validada.
+
+**D-032 · Registro encadenado** (`modulo_7_registro.py`). El hash se calcula
+sobre el texto exacto de cada línea y el verificador no re-serializa, porque
+Python y JavaScript escriben distinto algunos números (5000.0, 1e-05). Antes de
+escribir, se verifica la cadena (con caché por tamaño y fecha de modificación).
+
+**D-033 · Motor en vivo** (`modulo_8_vivo.py`). Usa exactamente las mismas
+funciones que el backtest: `main.preparar_conjunto` para las señales y
+`MotorExposicion.paso_apertura` para las órdenes. Es idempotente, registra la
+decisión antes de ejecutar y no opera nunca sobre velas perdidas. El archivo
+de velas parte de las 720 de Kraken: en desarrollo, arrancar con las últimas
+720 velas da exactamente la misma exposición que la historia completa (0
+diferencias en 269 días revisados). Test de repetición: igualdad exacta con el
+backtest.
+
+**D-034 · Reglas de seguridad** (`ReglasSeguridad`). Parada: caída del 35 % de la
+cartera V8 (por encima del -23 % de validación y del -35 % del peor activo en
+desarrollo), con liquidación en la siguiente apertura. Avisos sin efecto:
+pérdida diaria del 10 %, semanal del 20 %, 3 días seguidos sin ejecutarse. Salto
+de más del 50 % en una vela: ese día no se decide.
+
+**D-035 · Ejecución en GitHub Actions**, con límites verificados en la
+documentación oficial (2026-10-04): retrasos y ejecuciones perdidas en horas de
+carga, cron desactivado tras 60 días sin actividad, eventos de `GITHUB_TOKEN`
+que no crean otros workflows y pushes con `GITHUB_TOKEN` que no disparan Pages.
+Solución: un único workflow (cron 00:17 y 02:47 UTC) que ejecuta, sella y hace
+el commit; Pages se despliega desde el mismo workflow; commits por la API GraphQL
+(`createCommitOnBranch`) para que salgan verificados, pendiente de comprobar en
+el día 0.
+
+**D-036 · OpenTimestamps: sí, como ancla adicional.** Gratis y sin cuenta; ancla
+el hash del día en Bitcoin. Va en un paso que no bloquea si los calendarios
+fallan. El cliente no funciona en Windows (libssl), así que en local el
+pre-registro se sella desde la web de OpenTimestamps.
