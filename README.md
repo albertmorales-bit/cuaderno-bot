@@ -24,6 +24,7 @@ Estado del proyecto: ver [`ESTADO.md`](ESTADO.md). Decisiones y su motivo:
 | `modulo_6_validacion.py` | Ventanas que arrancan sin posición, benchmarks, bootstrap, Sharpe deflactado, actividad esperada |
 | `modulo_7_registro.py` | Registro JSONL encadenado con SHA-256, verificable sin re-serializar |
 | `modulo_8_vivo.py` | Motor de paper trading en vivo (mismo código que el backtest), idempotente |
+| `modulo_9_salidas.py` | Resumen, tuit (longitud real de X), comentario, hilo semanal e imagen del día |
 | `main.py` | `Configuracion` central y orquestación (uno o varios activos, diagnóstico) |
 | `validacion/` | `significancia.py` y `pbo.py` (Auditor Anti-Overfitting), sin modificar |
 | `scripts/` | Datos, análisis de las fases 2 y 4, `ejecutar_diario.py`, `commit_firmado.py`, `sellar_hash.py`, `preregistro.py` |

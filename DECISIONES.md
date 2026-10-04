@@ -245,3 +245,18 @@ el día 0.
 el hash del día en Bitcoin. Va en un paso que no bloquea si los calendarios
 fallan. El cliente no funciona en Windows (libssl), así que en local el
 pre-registro se sella desde la web de OpenTimestamps.
+
+## Fase 6 (2026-10-04)
+
+**D-037 · Salidas diarias desde el registro** (`modulo_9_salidas.py`), en
+`vivo/diario/AAAA-MM-DD/`: resumen JSON y Markdown, tuit, comentario con los
+enlaces, imagen y, los días 7, 14, 21... y el 90, un hilo semanal. El tuit
+cambia cada día (8 plantillas rotatorias y una frase de contexto), pero siempre
+lleva día N de 90, capital, resultado del día, caída y hash. Longitud doble:
+`len()` con cada enlace a 23 y el peso real de X según twitter-text v3
+(verificado en el repositorio oficial: "€", "…" o "→" cuentan 2). Imagen con la
+paleta validada por el script del skill de visualización (todo PASS en claro
+y oscuro), la curva completa desde el día 0 y la caída en un panel aparte.
+Como referencia se añade comprar y mantener al 100 % (con los mismos costes),
+que el pre-registro ya menciona. Los enlaces salen de `publicacion.json`, que no
+forma parte de la configuración congelada.

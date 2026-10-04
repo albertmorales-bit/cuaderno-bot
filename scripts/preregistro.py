@@ -25,11 +25,12 @@ sys.path.insert(0, str(RAIZ))
 
 import main  # noqa: E402
 from modulo_8_vivo import CARTERAS, PARES, ReglasSeguridad, configuracion_congelada, hash_configuracion  # noqa: E402
+from modulo_9_salidas import cabe_en_x, longitud_x  # noqa: E402
 
 ARCHIVOS_HUELLA = [
     "main.py", "modulo_1_datos.py", "modulo_1b_historico.py", "modulo_2_estrategia.py", "modulo_3_riesgo.py",
     "modulo_4_backtesting.py", "modulo_4b_exposicion.py", "modulo_5_regimenes.py", "modulo_6_validacion.py",
-    "modulo_7_registro.py", "modulo_8_vivo.py", "requirements.txt", "datos/v1/MANIFIESTO.json",
+    "modulo_7_registro.py", "modulo_8_vivo.py", "modulo_9_salidas.py", "requirements.txt", "publicacion.json", "datos/v1/MANIFIESTO.json",
     "informes/fase4/CRITERIOS_ACEPTACION.md", "informes/fase4/validacion.json",
 ]
 LIMITE_TUIT = 280
@@ -54,8 +55,9 @@ def tuit_dia_0(hash_prereg: str) -> str:
              "no batió a tener ~30 % invertido fijo. Lo arranco igual, sin tocar nada, "
              "con una cartera del 30 % fijo al lado.\n\n"
              f"Pre-registro SHA-256: {hash_prereg[:16]}…")
-    if len(texto) > LIMITE_TUIT:
-        raise ValueError(f"El tuit del día 0 tiene {len(texto)} caracteres (máx. {LIMITE_TUIT}).")
+    if not cabe_en_x(texto):
+        raise ValueError(f"El tuit del día 0 no cabe: len() {len(texto)}, peso en X {longitud_x(texto)} "
+                         f"(máx. {LIMITE_TUIT}).")
     return texto
 
 
@@ -140,7 +142,7 @@ def main_prereg() -> None:
     h = sha256(salida)
     (salida.parent / (salida.name + ".sha256")).write_text(f"{h}  {salida.name}\n", encoding="utf-8", newline="\n")
     tuit = tuit_dia_0(h)
-    print(f"{salida.name}: SHA-256 {h}\n\nTuit del día 0 ({len(tuit)} caracteres):\n\n{tuit}")
+    print(f"{salida.name}: SHA-256 {h}\n\nTuit del día 0 (len() {len(tuit)}, peso en X {longitud_x(tuit)}):\n\n{tuit}")
 
 
 if __name__ == "__main__":

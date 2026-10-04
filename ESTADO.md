@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 5 (motor en vivo listo; experimento sin arrancar).
+Última actualización: 2026-10-04, fin de la Fase 6 (salidas diarias listas; experimento sin arrancar).
 
 ## Hecho
 
@@ -60,6 +60,10 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
   OpenTimestamps, y `GUIA_PUBLICACION.md`. 95 tests. Probado contra Kraken real
   en un directorio temporal. D-031 a D-036.
 
+- **Fase 6 · Salidas para X.** Resumen, tuit variable con doble control de
+  longitud, comentario con enlaces, imagen e hilo semanal, generados cada día
+  desde el registro (D-037). 102 tests.
+
 ### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
@@ -70,7 +74,7 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 6 (salidas diarias para X), Fase 7 (web de transparencia), pre-registro y día 0; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
+- Fase 7 (web de transparencia), pre-registro y día 0; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
   uno nuevo que use los `.py` del repositorio.
@@ -78,12 +82,12 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 ## Decisiones abiertas (del usuario)
 
 1. Pasos de `GUIA_PUBLICACION.md` (email noreply, clave de firma, repositorio, rulesets).
-2. Reserva final (2024-07 → 2026-05): mantenerla cerrada o abrirla antes del día 1 como evidencia adicional publicada.
-3. Visto bueno a las reglas de seguridad (D-034) y al riesgo de entrada del día 1.
+2. Rellenar `publicacion.json` con el usuario de GitHub.
 
 Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
 taker 0,80 %, tramos de `VALIDACION.md`, V8 (D-023), sin Fase 3 (D-027),
-criterios v1 (D-028), paper trading con V8 NO APTO y FIJO30 (D-031).
+criterios v1 (D-028), paper trading con V8 NO APTO y FIJO30 (D-031), reserva
+cerrada, reglas de seguridad (D-034) y riesgo del día 1 aceptados.
 
 ## Cómo retomar
 
