@@ -37,7 +37,9 @@ from modulo_1_datos import (
     duracion_intervalo,
 )
 from modulo_1b_historico import cargar_historico
-from modulo_2_estrategia import Disparador, generar_senales
+from modulo_2_estrategia import Disparador, generar_senales, generar_senales_conjunto
+from modulo_3_riesgo import escala_por_volatilidad
+from modulo_4b_exposicion import MotorExposicion, ParametrosExposicion, ResultadoExposicion
 from modulo_4_backtesting import (
     COMISION_TAKER_KRAKEN,
     SLIPPAGE_PESIMISTA,
@@ -127,6 +129,15 @@ class Configuracion:
     comision_pct: float = COMISION_TAKER_KRAKEN   # 0,80 % taker, Kraken Pro nivel 1.
     slippage_pct: float = SLIPPAGE_PESIMISTA      # 0,10 %.
 
+    # --- Conjunto + objetivo de volatilidad (Fase 2, D-023; PROVISIONAL) ---
+    # Ventanas fijadas de antemano (los dos sistemas Turtle originales y uno
+    # lento), NO ajustadas con nuestros datos.
+    sistemas_donchian: tuple[tuple[int, int], ...] = ((20, 10), (55, 20), (100, 50))
+    objetivo_volatilidad: float = 0.40   # Anual, por activo.
+    ventana_volatilidad: int = 30
+    banda_reajuste: float = 0.10         # Puntos de exposición (D-024).
+    velas_calentamiento: int = 400       # Común a estrategias y benchmarks (D-010).
+
     # --- Validación ---
     fraccion_oos: float = 0.3   # Partición 70/30 por tiempo, con embargo.
 
@@ -192,6 +203,46 @@ def parametros_backtest(
         unidades_fraccionables=config.unidades_fraccionables,
         tamano_minimo=config.tamanos_minimos.get(ticker, 0.0),
         periodos_por_anio=config.periodos_anuales(),
+    )
+
+
+def preparar_conjunto(config: Configuracion, datos: pd.DataFrame) -> pd.DataFrame:
+    """Señal del conjunto Donchian escalada por volatilidad -> columna
+    `exposicion_objetivo` para `MotorExposicion`. Todo con datos hasta el
+    cierre de cada vela."""
+    df = generar_senales_conjunto(
+        datos, sistemas=config.sistemas_donchian, periodo_atr=config.periodo_atr,
+        velas_calentamiento=config.velas_calentamiento,
+    )
+    df["escala_volatilidad"] = escala_por_volatilidad(
+        df["Close"], config.objetivo_volatilidad, config.ventana_volatilidad, config.periodos_anuales(),
+    )
+    df["exposicion_objetivo"] = df["senal_conjunto"] * df["escala_volatilidad"]
+    return df
+
+
+def parametros_exposicion(
+    config: Configuracion, ticker: str, capital: Optional[float] = None
+) -> ParametrosExposicion:
+    """Parámetros del motor por exposición objetivo para un activo."""
+    return ParametrosExposicion(
+        capital_inicial=config.capital_inicial if capital is None else capital,
+        comision_pct=config.comision_pct,
+        slippage_pct=config.slippage_pct,
+        banda_reajuste=config.banda_reajuste,
+        tamano_minimo=config.tamanos_minimos.get(ticker, 0.0),
+        periodos_por_anio=config.periodos_anuales(),
+    )
+
+
+def ejecutar_conjunto(
+    config: Configuracion, ticker: str, datos: Optional[pd.DataFrame] = None,
+    capital: Optional[float] = None,
+) -> ResultadoExposicion:
+    """Backtest del conjunto + objetivo de volatilidad para un activo."""
+    datos = obtener_velas(config, ticker) if datos is None else datos
+    return MotorExposicion(parametros_exposicion(config, ticker, capital), activo=ticker).ejecutar(
+        preparar_conjunto(config, datos)
     )
 
 

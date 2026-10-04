@@ -151,3 +151,27 @@ excluido.
 2xATR, la exposición mediana por operación en el tramo de desarrollo es del
 10 % (BTC) y del 8 % (ETH) del capital del activo, unos 4-5 % del total con dos
 activos. Pendiente de decisión del usuario: cómo dimensionar.
+
+## Fase 2 (2026-10-04)
+
+**D-023 · Candidata principal: conjunto Donchian + objetivo de volatilidad**
+(aceptado por el usuario como "sigue" a las recomendaciones de la Fase 1b).
+Tres sistemas solo largos con ventanas fijadas de antemano, 20/10 y 55/20 (los
+dos sistemas Turtle originales) y 100/50; exposición = fracción de sistemas en
+tendencia x min(1; 40 % / volatilidad realizada de 30 días). Sin filtro EMA200
+en la candidata, para poder medirla en todos los regímenes. La v5 original se
+mantiene como variante 7 de comparación.
+
+**D-024 · Motor por exposición objetivo** (`modulo_4b_exposicion.py`).
+Exposición decidida al cierre y ejecutada en la apertura siguiente; reajuste
+solo si la desviación supera 10 puntos; entradas y salidas completas siempre;
+compras limitadas por el efectivo; cada orden se registra con su precio de
+referencia, comisión y slippage. Sin stop por ATR en la candidata: el canal de
+salida de cada sistema hace de stop y el escalado por volatilidad limita el
+riesgo. Calentamiento común de 400 velas para estrategias y benchmarks.
+
+**D-025 · Regímenes con reglas simples y causales** (`modulo_5_regimenes.py`):
+tendencia (SMA200 y pendiente), volatilidad (terciles del percentil
+expansivo) y fuerza (ratio de eficiencia frente a su mediana expansiva). La
+rentabilidad del día t se atribuye al régimen al cierre de t-1. Criterios de
+la fase fijados antes de ejecutar en `informes/fase2/CRITERIOS.md`.

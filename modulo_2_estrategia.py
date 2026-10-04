@@ -516,6 +516,53 @@ def generar_senales(
     return df
 
 
+# -----------------------------------------------------------------------
+# Conjunto de sistemas de ruptura (Fase 2, D-023)
+# -----------------------------------------------------------------------
+
+def generar_senales_conjunto(
+    df: pd.DataFrame,
+    sistemas: tuple[tuple[int, int], ...] = ((20, 10), (55, 20), (100, 50)),
+    periodo_atr: int = 14,
+    velas_calentamiento: int = 400,
+) -> pd.DataFrame:
+    """Conjunto de sistemas Donchian (solo largos), cada uno con su propia
+    ventana de entrada y de salida, fijadas de antemano (no ajustadas).
+
+    Cada sistema `k` es una máquina de estados 0/1: entra cuando el cierre
+    supera el máximo de las `entrada_k` velas anteriores y sale cuando pierde
+    el mínimo de las `salida_k` anteriores (canales con `shift(1)`). La
+    columna `senal_conjunto` es la media de los estados (0, 1/3, 2/3, 1 con
+    tres sistemas): la fracción de sistemas que están "en tendencia" al
+    CIERRE de cada vela. Se ejecuta en la apertura siguiente (Módulo 4b).
+
+    `velas_calentamiento` es fijo (no derivado de los sistemas) para que
+    todas las variantes y los benchmarks empiecen el mismo día (D-010).
+    """
+    if len(df) <= velas_calentamiento:
+        raise ValueError("No hay velas suficientes tras el calentamiento.")
+    df = df.copy()
+    falso = np.zeros(len(df), dtype=bool)
+    estados = []
+    for entrada, salida in sistemas:
+        if salida >= entrada:
+            raise ValueError(f"Sistema {entrada}/{salida}: la salida debe ser más corta que la entrada.")
+        alto, _ = calcular_canal_donchian(df, entrada)
+        _, bajo = calcular_canal_donchian(df, salida)
+        estado = ensamblar_estado(
+            (df["Close"] > alto).to_numpy(dtype=bool), falso,
+            (df["Close"] < bajo).to_numpy(dtype=bool), falso,
+        )
+        columna = f"estado_{entrada}_{salida}"
+        df[columna] = estado
+        estados.append(columna)
+
+    df["atr"] = calcular_atr(df, periodo_atr)
+    df["calentamiento_ok"] = np.arange(len(df)) >= velas_calentamiento
+    df["senal_conjunto"] = df[estados].mean(axis=1).where(df["calentamiento_ok"], 0.0)
+    return df
+
+
 # =============================================================================
 # Bloque de auto-verificación: datos simulados (tendencia + tramo lateral)
 # para comprobar que el filtro de régimen realmente reduce las señales en

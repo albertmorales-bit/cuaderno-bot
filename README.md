@@ -19,9 +19,12 @@ Estado del proyecto: ver [`ESTADO.md`](ESTADO.md). Decisiones y su motivo:
 | `modulo_2_estrategia.py` | Indicadores y señales: Donchian (v5), pullback (v4), cruce EMA (v3); filtros de régimen |
 | `modulo_3_riesgo.py` | Tamaño por riesgo fijo, stop por ATR, tope sin apalancamiento, mínimos de orden |
 | `modulo_4_backtesting.py` | Motor vela a vela, costes, métricas, partición con embargo, exportación CSV |
+| `modulo_4b_exposicion.py` | Motor por exposición objetivo (0-1) con banda de reajuste; benchmarks con los mismos costes |
+| `modulo_5_regimenes.py` | Regímenes causales (tendencia, volatilidad, fuerza), atribución y bootstrap por bloques |
 | `main.py` | `Configuracion` central y orquestación (uno o varios activos, diagnóstico) |
 | `validacion/` | `significancia.py` y `pbo.py` (Auditor Anti-Overfitting), sin modificar |
-| `scripts/` | `construir_datos.py` (crea `datos/<versión>`) e `informe_datos.py` (`CALIDAD.md`) |
+| `scripts/` | `construir_datos.py`, `informe_datos.py` y `fase2_regimenes.py` |
+| `informes/` | Criterios fijados antes de cada análisis y sus resultados |
 | `datos/` | Datos congelados por versión: CSV crudos por fuente, serie limpia, `MANIFIESTO.json`, `CALIDAD.md` |
 | `tests/` | pytest, sin red |
 | `notebooks/` | Cuaderno de Colab original de la v4 (histórico; no es la fuente del código) |

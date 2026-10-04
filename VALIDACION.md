@@ -13,9 +13,10 @@ número es el que se pasa a `significancia.py --variantes`.
 | # | Variante | Datos | Resultado | Fecha |
 |---|----------|-------|-----------|-------|
 | 1-6 | v1-v4: cruce EMA20/50 con/sin filtro, umbrales ADX, 1/5/8 activos, pullback | Kraken 4h, **~120 días reales** (se pedían 3 años; la API solo da 720 velas) | PF 0,70-1,00, WR 30-38 %; última (v4, 8 activos): 60 operaciones, PF 0,70, -1,30 % | antes de 2026-10-04 |
-| 7 | v5: Donchian 20/10 + EMA200, solo largos | (pendiente) | (pendiente) | — |
+| 7 | v5: Donchian 20/10 + EMA200, solo largos | datos/v1, desarrollo | (Fase 2) | 2026-10-04 |
+| 8 | Conjunto Donchian 20/10 + 55/20 + 100/50, objetivo de volatilidad 40 %, solo largos | datos/v1, desarrollo | (Fase 2) | 2026-10-04 |
 
-**Total actual: 7.** Las variantes 1-6 compartieron una ventana de ~4 meses y
+**Total actual: 8.** Las variantes 1-6 compartieron una ventana de ~4 meses y
 costes irreales (0,06 % + 0,02 %), así que su "NO APTO" es débil, pero se dan
 por cerradas y NO se vuelven a ejecutar (cada nueva mirada contaría como otra
 variante).

@@ -76,3 +76,11 @@ def test_datos_v1_en_disco_pasan_el_checksum():
         assert df.index.max() < pd.Timestamp("2022-01-01", tz="UTC")
         assert df.index.is_monotonic_increasing and not df.index.duplicated().any()
         assert set(df["fuente"].unique()) <= {"coinbase", "bitstamp"}
+
+
+def test_conjunto_desde_configuracion_con_datos_locales():
+    config = main.Configuracion()
+    r = main.ejecutar_conjunto(config, "BTC/EUR", datos=velas_sinteticas(n=1500, semilla=8))
+    assert 0 < r.metricas["exposicion_media"] <= 1
+    assert r.curva_capital.index[0] == velas_sinteticas(n=1500, semilla=8).index[config.velas_calentamiento]
+    assert all(o.precio_referencia > 0 for o in r.operaciones)

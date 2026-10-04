@@ -262,6 +262,30 @@ def calcular_gestion_riesgo(
     )
 
 
+def escala_por_volatilidad(
+    cierre: "pd.Series",
+    objetivo_anual: float = 0.40,
+    ventana: int = 30,
+    periodos_por_anio: int = 365,
+    tope: float = 1.0,
+) -> "pd.Series":
+    """Fracción del capital a exponer para que la posición tenga, en
+    promedio, una volatilidad anual cercana a `objetivo_anual` (Fase 2, D-023).
+
+        escala_t = min(tope, objetivo_anual / vol_realizada_t)
+
+    `vol_realizada_t` es la desviación típica de las rentabilidades
+    logarítmicas diarias de las `ventana` velas hasta el CIERRE de `t`
+    inclusive, anualizada. Solo usa información conocida al cierre de `t`;
+    el motor la aplica en la apertura de `t+1`. `tope=1.0` = sin
+    apalancamiento: solo puede reducir la exposición, nunca ampliarla.
+    """
+    import numpy as np  # import local: el resto del módulo no depende de numpy
+
+    vol = np.log(cierre).diff().rolling(ventana, min_periods=ventana).std() * np.sqrt(periodos_por_anio)
+    return (objetivo_anual / vol).clip(upper=tope).fillna(0.0)
+
+
 def _imprimir_plan(etiqueta: str, plan: ResultadoGestionRiesgo) -> None:
     """Utilidad de presentación para el bloque de validación numérica."""
     print(f"\n--- {etiqueta} ---")
