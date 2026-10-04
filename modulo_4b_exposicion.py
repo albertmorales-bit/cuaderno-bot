@@ -73,6 +73,15 @@ class Operacion:
 
 
 @dataclass
+class EstadoCartera:
+    """Estado de una cartera de un activo entre dos velas."""
+
+    efectivo: float
+    unidades: float
+    episodio: dict | None = None
+
+
+@dataclass
 class ResultadoExposicion:
     curva_capital: pd.Series
     exposicion: pd.Series        # Fracción invertida al cierre de cada vela.
@@ -108,43 +117,19 @@ class MotorExposicion:
         cierre = df["Close"].to_numpy(dtype=float)
         indices = df.index
 
-        efectivo, unidades = p.capital_inicial, 0.0
+        estado = EstadoCartera(efectivo=p.capital_inicial, unidades=0.0)
         operaciones: list[Operacion] = []
         episodios: list[Trade] = []
-        episodio: dict | None = None
         equity = np.empty(len(df))
         exposicion = np.empty(len(df))
 
         for i in range(len(df)):
             if i > 0:
-                w_obj = float(objetivo[i - 1])
-                equity_apertura = efectivo + unidades * apertura[i]
-                w_actual = unidades * apertura[i] / equity_apertura if equity_apertura > 0 else 0.0
-                if unidades > 0 and w_obj == 0:
-                    motivo = "salida"
-                elif unidades == 0 and w_obj > 0:
-                    motivo = "entrada"
-                elif unidades > 0 and abs(w_obj - w_actual) > p.banda_reajuste:
-                    motivo = "reajuste"
-                else:
-                    motivo = ""
-                if motivo:
-                    if motivo == "entrada":
-                        episodio = {"fecha": indices[i], "capital_antes": equity_apertura,
-                                    "compras": 0.0, "unidades_compradas": 0.0, "ventas": 0.0,
-                                    "unidades_vendidas": 0.0, "comision": 0.0, "slippage": 0.0,
-                                    "max_unidades": 0.0}
-                    efectivo, unidades = self._operar(
-                        indices[i], apertura[i], w_obj, w_actual, equity_apertura,
-                        efectivo, unidades, motivo, operaciones, episodio,
-                    )
-                    if episodio is not None and unidades == 0:
-                        episodios.append(self._cerrar_episodio(episodio, indices[i], efectivo, "senal"))
-                        episodio = None
+                self.paso_apertura(estado, float(objetivo[i - 1]), apertura[i], indices[i], operaciones, episodios)
+            equity[i] = estado.efectivo + estado.unidades * cierre[i]
+            exposicion[i] = estado.unidades * cierre[i] / equity[i] if equity[i] > 0 else 0.0
 
-            equity[i] = efectivo + unidades * cierre[i]
-            exposicion[i] = unidades * cierre[i] / equity[i] if equity[i] > 0 else 0.0
-
+        efectivo, unidades, episodio = estado.efectivo, estado.unidades, estado.episodio
         if unidades > 0:   # Cierre forzoso al final de los datos, al cierre de la última vela.
             equity_final = efectivo + unidades * cierre[-1]
             efectivo, unidades = self._operar(
@@ -171,6 +156,47 @@ class MotorExposicion:
         })
         return ResultadoExposicion(curva, serie_exposicion, operaciones, episodios, metricas,
                                    p.capital_inicial, float(curva.iloc[-1]))
+
+    def paso_apertura(
+        self,
+        estado: "EstadoCartera",
+        w_obj: float,
+        apertura: float,
+        fecha: pd.Timestamp,
+        operaciones: list[Operacion],
+        episodios: list[Trade],
+    ) -> list[Operacion]:
+        """Ejecuta en la apertura `apertura` la exposición objetivo decidida al
+        cierre anterior. Modifica `estado` y devuelve las órdenes nuevas.
+
+        Es el ÚNICO punto donde se decide y ejecuta una orden: lo usan tanto el
+        backtest (`ejecutar`) como el motor en vivo (`modulo_7_vivo`). Así los
+        dos no pueden divergir (D-029)."""
+        p = self.params
+        antes = len(operaciones)
+        equity_apertura = estado.efectivo + estado.unidades * apertura
+        w_actual = estado.unidades * apertura / equity_apertura if equity_apertura > 0 else 0.0
+        if estado.unidades > 0 and w_obj == 0:
+            motivo = "salida"
+        elif estado.unidades == 0 and w_obj > 0:
+            motivo = "entrada"
+        elif estado.unidades > 0 and abs(w_obj - w_actual) > p.banda_reajuste:
+            motivo = "reajuste"
+        else:
+            return []
+        if motivo == "entrada":
+            estado.episodio = {"fecha": fecha, "capital_antes": equity_apertura,
+                               "compras": 0.0, "unidades_compradas": 0.0, "ventas": 0.0,
+                               "unidades_vendidas": 0.0, "comision": 0.0, "slippage": 0.0,
+                               "max_unidades": 0.0}
+        estado.efectivo, estado.unidades = self._operar(
+            fecha, apertura, w_obj, w_actual, equity_apertura,
+            estado.efectivo, estado.unidades, motivo, operaciones, estado.episodio,
+        )
+        if estado.episodio is not None and estado.unidades == 0:
+            episodios.append(self._cerrar_episodio(estado.episodio, fecha, estado.efectivo, "senal"))
+            estado.episodio = None
+        return operaciones[antes:]
 
     def _operar(self, fecha, precio, w_obj, w_actual, equity_ref, efectivo, unidades, motivo,
                 operaciones, episodio):
