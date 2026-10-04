@@ -175,3 +175,9 @@ tendencia (SMA200 y pendiente), volatilidad (terciles del percentil
 expansivo) y fuerza (ratio de eficiencia frente a su mediana expansiva). La
 rentabilidad del día t se atribuye al régimen al cierre de t-1. Criterios de
 la fase fijados antes de ejecutar en `informes/fase2/CRITERIOS.md`.
+
+**D-026 · Resultado de la Fase 2** (`informes/fase2/RESULTADOS.md`). Según
+los criterios pre-registrados, la Fase 3 queda JUSTIFICADA: (A) se cumple en
+volatilidad (alta < baja) y en fuerza (fuerte > débil). (B) no se cumple en
+ningún régimen. Parte del efecto (A) es mecánica (más exposición en baja
+volatilidad y en tendencia fuerte). Cómo seguir: decisión del usuario.

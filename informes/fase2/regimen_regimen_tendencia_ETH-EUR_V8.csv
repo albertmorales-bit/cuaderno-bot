@@ -1,0 +1,4 @@
+regimen,dias,pct_dias,exposicion_media,estrategia_rent_anual_pct,estrategia_sharpe,comprar_mantener_rent_anual_pct,comprar_mantener_sharpe
+alcista,719,56.3038,0.3394,62.2536,1.6972,121.9690,1.2361
+bajista,360,28.1911,0.0484,2.5376,0.2505,17.0130,0.1729
+mixto,198,15.5051,0.1599,66.5003,2.3601,222.9716,2.5537

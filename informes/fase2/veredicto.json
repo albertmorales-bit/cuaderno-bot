@@ -1,0 +1,143 @@
+{
+  "fase3_justificada": true,
+  "dimensiones": {
+    "regimen_tendencia": {
+      "par": "alcista - bajista",
+      "diferencia_anual_pct": 58.75009376540361,
+      "ic90_pct": [
+        23.26254895964372,
+        92.15127149928526
+      ],
+      "signos": {
+        "BTC/EUR mitad 1": 1,
+        "BTC/EUR mitad 2": -1,
+        "ETH/EUR mitad 1": -1,
+        "ETH/EUR mitad 2": 1,
+        "BTC/EUR": 1,
+        "ETH/EUR": 1
+      },
+      "insuficiente": [
+        "bajista en ETH/EUR mitad 2 (13 días)"
+      ],
+      "cumple_A": false,
+      "regimenes": {
+        "alcista": {
+          "media_anual_pct": 64.3036562606824,
+          "ic90_pct": [
+            32.82588529519476,
+            95.11343457881208
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": []
+        },
+        "bajista": {
+          "media_anual_pct": 5.553562495278797,
+          "ic90_pct": [
+            -9.31653962281152,
+            22.603245904288123
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": [
+            "ETH/EUR mitad 2"
+          ]
+        },
+        "mixto": {
+          "media_anual_pct": 57.05898141138198,
+          "ic90_pct": [
+            12.800472939344498,
+            107.05026805235431
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": [
+            "ETH/EUR mitad 2"
+          ]
+        }
+      }
+    },
+    "regimen_volatilidad": {
+      "par": "alta - baja",
+      "diferencia_anual_pct": -63.57866924903038,
+      "ic90_pct": [
+        -117.32578775980464,
+        -10.257256819637965
+      ],
+      "signos": {
+        "BTC/EUR mitad 1": -1,
+        "BTC/EUR mitad 2": -1,
+        "ETH/EUR mitad 1": -1,
+        "ETH/EUR mitad 2": -1,
+        "BTC/EUR": -1,
+        "ETH/EUR": -1
+      },
+      "insuficiente": [],
+      "cumple_A": true,
+      "regimenes": {
+        "alta": {
+          "media_anual_pct": 24.31725289502987,
+          "ic90_pct": [
+            -4.172546463584335,
+            55.22638580507352
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": []
+        },
+        "baja": {
+          "media_anual_pct": 87.89592214406025,
+          "ic90_pct": [
+            44.179917868911296,
+            133.88328411551055
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": []
+        },
+        "media": {
+          "media_anual_pct": 44.0286217855576,
+          "ic90_pct": [
+            12.36685205557675,
+            75.27154089226576
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": []
+        }
+      }
+    },
+    "regimen_fuerza": {
+      "par": "fuerte - debil",
+      "diferencia_anual_pct": 63.65003080171252,
+      "ic90_pct": [
+        25.513958563203992,
+        100.9321951210207
+      ],
+      "signos": {
+        "BTC/EUR mitad 1": 1,
+        "BTC/EUR mitad 2": 1,
+        "ETH/EUR mitad 1": 1,
+        "ETH/EUR mitad 2": 1,
+        "BTC/EUR": 1,
+        "ETH/EUR": 1
+      },
+      "insuficiente": [],
+      "cumple_A": true,
+      "regimenes": {
+        "debil": {
+          "media_anual_pct": 18.02096937700712,
+          "ic90_pct": [
+            -0.17431758787094334,
+            35.77521332191722
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": []
+        },
+        "fuerte": {
+          "media_anual_pct": 81.67100017871964,
+          "ic90_pct": [
+            46.70294026289368,
+            116.0992120837553
+          ],
+          "cumple_B": false,
+          "submuestras_insuficientes": []
+        }
+      }
+    }
+  }
+}

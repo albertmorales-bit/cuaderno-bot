@@ -2,7 +2,7 @@
 
 > Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.
 
-Estado: **sin resultados válidos todavía.** Los criterios de aceptación se
+Estado: **solo resultados del tramo de desarrollo** (Fase 2, `informes/fase2/RESULTADOS.md`). Ninguno es fuera de muestra. Los criterios de aceptación se
 fijarán y versionarán aquí ANTES de abrir el tramo de validación (Fase 4).
 
 ## Contador de variantes evaluadas
@@ -13,8 +13,8 @@ número es el que se pasa a `significancia.py --variantes`.
 | # | Variante | Datos | Resultado | Fecha |
 |---|----------|-------|-----------|-------|
 | 1-6 | v1-v4: cruce EMA20/50 con/sin filtro, umbrales ADX, 1/5/8 activos, pullback | Kraken 4h, **~120 días reales** (se pedían 3 años; la API solo da 720 velas) | PF 0,70-1,00, WR 30-38 %; última (v4, 8 activos): 60 operaciones, PF 0,70, -1,30 % | antes de 2026-10-04 |
-| 7 | v5: Donchian 20/10 + EMA200, solo largos | datos/v1, desarrollo | (Fase 2) | 2026-10-04 |
-| 8 | Conjunto Donchian 20/10 + 55/20 + 100/50, objetivo de volatilidad 40 %, solo largos | datos/v1, desarrollo | (Fase 2) | 2026-10-04 |
+| 7 | v5: Donchian 20/10 + EMA200, solo largos | datos/v1, desarrollo | BTC: CAGR +17 %, Sharpe 1,42, DD -11 %, 22 ops · ETH: +12 %, 1,10, -10 %, 13 ops | 2026-10-04 |
+| 8 | Conjunto Donchian 20/10 + 55/20 + 100/50, objetivo de volatilidad 40 %, solo largos | datos/v1, desarrollo | BTC: CAGR +60 %, Sharpe 1,66, DD -35 %, 13 episodios · ETH: +52 %, 1,53, -21 %, 9 episodios (B&H: Sharpe 1,41 / 1,11; DD -83 % / -83 %) | 2026-10-04 |
 
 **Total actual: 8.** Las variantes 1-6 compartieron una ventana de ~4 meses y
 costes irreales (0,06 % + 0,02 %), así que su "NO APTO" es débil, pero se dan

@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 1b.
+Última actualización: 2026-10-04, fin de la Fase 2.
 
 ## Hecho
 
@@ -39,6 +39,12 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
   recomendación priorizada (D-021). Hallazgo: el sizing actual deja la cartera
   invertida al 4-5 % (D-022).
 
+- **Fase 2 · Regímenes.** Conjunto Donchian + objetivo de volatilidad (V8),
+  motor por exposición, clasificador de regímenes causal; criterios commiteados
+  antes de ejecutar (`c02be78`). En desarrollo: (A) se cumple en volatilidad y
+  fuerza, (B) en ninguno; la Fase 3 queda justificada por la regla
+  (D-026). 71 tests.
+
 ### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
@@ -49,20 +55,19 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 2 (regímenes),
-  3 (condicional), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
+- Fase 3 (condicional, pendiente de decisión), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
   uno nuevo que use los `.py` del repositorio.
 
 ## Decisiones abiertas (del usuario)
 
-1. Tamaño de posición (D-022): mantener 1 % de riesgo por stop, u objetivo de volatilidad (y cuál).
-2. Núcleo de la estrategia: Donchian 20/10 solo, o conjunto de ventanas fijado de antemano.
-3. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
+1. Cómo seguir tras la Fase 2 (D-026): Fase 3 completa (reversión a la media + router), un único router de exposición como variante 9, o pasar directamente a la Fase 4 con la V8.
+2. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
 
 Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
-taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01).
+taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01), conjunto
+Donchian 20/10 + 55/20 + 100/50 con objetivo de volatilidad del 40 % (D-023).
 
 ## Cómo retomar
 
