@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 1.
+Última actualización: 2026-10-04, fin de la Fase 1b.
 
 ## Hecho
 
@@ -34,6 +34,11 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
   paginador de ccxt (un lote vacío antes del inicio de cotización cortaba la
   descarga).
 
+- **Fase 1b · Investigación.** `INVESTIGACION.md`: evidencia citada de
+  tendencia, objetivo de volatilidad, combinación, carry y folclore, con
+  recomendación priorizada (D-021). Hallazgo: el sizing actual deja la cartera
+  invertida al 4-5 % (D-022).
+
 ### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
@@ -44,7 +49,7 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 1b (investigación), 2 (regímenes),
+- Fase 2 (regímenes),
   3 (condicional), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
@@ -52,11 +57,12 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Decisiones abiertas (del usuario)
 
-1. Fecha de la primera ejecución de las variantes v1-v3 (para afinar el corte de la reserva, D-019).
-2. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
+1. Tamaño de posición (D-022): mantener 1 % de riesgo por stop, u objetivo de volatilidad (y cuál).
+2. Núcleo de la estrategia: Donchian 20/10 solo, o conjunto de ventanas fijado de antemano.
+3. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
 
 Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
-taker 0,80 %, tramos de `VALIDACION.md`.
+taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01).
 
 ## Cómo retomar
 

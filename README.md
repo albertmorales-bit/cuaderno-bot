@@ -7,7 +7,8 @@ Bot de trading cripto en **paper trading** (dinero ficticio) para la serie
 
 Estado del proyecto: ver [`ESTADO.md`](ESTADO.md). Decisiones y su motivo:
 [`DECISIONES.md`](DECISIONES.md). Resultados y variantes probadas:
-[`VALIDACION.md`](VALIDACION.md).
+[`VALIDACION.md`](VALIDACION.md). Evidencia revisada antes de diseñar:
+[`INVESTIGACION.md`](INVESTIGACION.md).
 
 ## Arquitectura
 

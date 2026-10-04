@@ -138,3 +138,16 @@ con que la v4 terminara sus datos el 2026-09-04 20:00. Todas las variantes
 usaron la ventana de 720 velas de 4h 2026-05-07 → 2026-09-04. La reserva pasa a
 2024-07-01 → 2026-05-01 (669 velas). Supuesto declarado: no hubo ejecuciones en
 Colab anteriores a ese día que no dejaran rastro local.
+
+## Fase 1b (2026-10-04)
+
+**D-021 · Prioridades de investigación** (detalle y fuentes en
+`INVESTIGACION.md`): núcleo de seguimiento de tendencia; tamaño por objetivo
+de volatilidad; reversión a la media con prioridad baja (la evidencia para
+BTC/ETH diario apunta a momentum, no a reversión); carry excluido; folclore
+excluido.
+
+**D-022 · Hallazgo sobre el tamaño de posición.** Con 1 % de riesgo y stop a
+2xATR, la exposición mediana por operación en el tramo de desarrollo es del
+10 % (BTC) y del 8 % (ETH) del capital del activo, unos 4-5 % del total con dos
+activos. Pendiente de decisión del usuario: cómo dimensionar.
