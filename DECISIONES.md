@@ -260,3 +260,26 @@ y oscuro), la curva completa desde el día 0 y la caída en un panel aparte.
 Como referencia se añade comprar y mantener al 100 % (con los mismos costes),
 que el pre-registro ya menciona. Los enlaces salen de `publicacion.json`, que no
 forma parte de la configuración congelada.
+
+## Fase 7 (2026-10-04)
+
+**D-038 · Web de transparencia en GitHub Pages** (`web/`), HTML, CSS y JS a mano,
+sin dependencias. La página recalcula todo a partir de `registro.jsonl`: día N
+de 90, capital, resultado, caída actual y máxima de las tres carteras, curva
+completa y caída con cursor y tooltip (también con el teclado) y tabla
+equivalente, régimen y motivo de cada decisión, todas las órdenes con
+comisión, slippage y funding, velas perdidas y avisos, y el pre-registro con su
+SHA-256 calculado en el navegador. El botón "Verificar" recalcula la cadena con
+WebCrypto; también se verifica al cargar, y si está rota aparece un aviso
+destacado. Un test de paridad ejecuta el JavaScript real con Node y comprueba
+que verifica y calcula exactamente lo mismo que Python. Probado en escritorio,
+en móvil (375 px, sin scroll horizontal) y en modo oscuro, con una demostración
+sintética marcada como tal (`scripts/construir_web.py --demo`).
+
+**D-039 · Despliegue de Pages desde el mismo workflow** (límites verificados en
+la documentación oficial el 2026-10-04: 1 GB, 100 GB/mes de tráfico, 10
+minutos por despliegue; sin uso comercial). Trabajos `web` → `desplegar` con
+`configure-pages@v5`, `upload-pages-artifact@v4` y `deploy-pages@v4`. La web se
+publica aunque falle la ejecución del bot, y el checkout de `web` pide `main`
+para recoger el commit que acaba de hacer el bot. El bot solo puede commitear en
+`vivo/`.

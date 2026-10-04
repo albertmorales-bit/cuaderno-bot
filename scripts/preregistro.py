@@ -32,6 +32,7 @@ ARCHIVOS_HUELLA = [
     "modulo_4_backtesting.py", "modulo_4b_exposicion.py", "modulo_5_regimenes.py", "modulo_6_validacion.py",
     "modulo_7_registro.py", "modulo_8_vivo.py", "modulo_9_salidas.py", "requirements.txt", "publicacion.json", "datos/v1/MANIFIESTO.json",
     "informes/fase4/CRITERIOS_ACEPTACION.md", "informes/fase4/validacion.json",
+    "web/index.html", "web/app.js", "web/styles.css", ".github/workflows/diario.yml",
 ]
 LIMITE_TUIT = 280
 

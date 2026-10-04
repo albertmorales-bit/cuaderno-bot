@@ -33,6 +33,7 @@ Estado del proyecto: ver [`ESTADO.md`](ESTADO.md). Decisiones y su motivo:
 | `informes/` | Criterios fijados antes de cada análisis y sus resultados |
 | `datos/` | Datos congelados por versión: CSV crudos por fuente, serie limpia, `MANIFIESTO.json`, `CALIDAD.md` |
 | `tests/` | pytest, sin red |
+| `web/` | Panel de transparencia (GitHub Pages): recalcula todo desde el registro y verifica la cadena en el navegador |
 | `notebooks/` | Cuaderno de Colab original de la v4 (histórico; no es la fuente del código) |
 
 ## Reproducir (Windows, PowerShell)
@@ -55,3 +56,10 @@ construir una versión nueva desde las APIs públicas:
 ```
 
 Publicar y arrancar: [`GUIA_PUBLICACION.md`](GUIA_PUBLICACION.md).
+
+Ver la web con datos de demostración (sintéticos) en local:
+
+```powershell
+.venv\Scripts\python scripts\construir_web.py --demo
+.venv\Scripts\python -m http.server 8341 --directory _site_demo
+```

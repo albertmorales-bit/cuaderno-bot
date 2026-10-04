@@ -1,15 +1,16 @@
 # Paper trading diario (dinero ficticio). Un solo workflow que ejecuta el bot,
-# sella el hash del día y hace el commit firmado vía API: no depende de que un
-# commit con GITHUB_TOKEN dispare otro workflow (no lo haría; ver la
-# documentación de GitHub sobre GITHUB_TOKEN).
+# sella el hash del día, hace el commit firmado vía API y publica la web.
+# No depende de que un commit con GITHUB_TOKEN dispare otro workflow (no lo
+# haría), ni de que dispare un build de Pages (tampoco). Ver la documentación
+# de GitHub sobre GITHUB_TOKEN y GitHub Pages.
 #
 # - Cron a las 00:17 UTC (minuto "raro" para evitar el pico de las horas en
 #   punto) y segundo intento a las 02:47 UTC por si el primero se retrasa o se
 #   pierde. El motor es idempotente: el reintento nunca duplica operaciones.
 # - Los commits diarios mantienen el repositorio activo: los cron de un
 #   repositorio público se desactivan tras 60 días sin actividad.
-# - La web (GitHub Pages) se despliega desde este mismo workflow (Fase 7):
-#   los pushes hechos con GITHUB_TOKEN no disparan builds de Pages.
+# - La web se publica aunque la ejecución del bot falle, para que el fallo
+#   (vela perdida) también quede a la vista.
 name: Paper trading diario
 
 on:
@@ -23,9 +24,6 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: write
-
 concurrency:
   group: paper-trading
   cancel-in-progress: false
@@ -34,6 +32,8 @@ jobs:
   diario:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -56,3 +56,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/commit_firmado.py
+
+  web:
+    needs: diario
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main          # el commit que acaba de crear el bot, no el que lanzó el workflow
+      - name: Construir la web (solo biblioteca estándar)
+        run: python3 scripts/construir_web.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  desplegar:
+    needs: web
+    if: ${{ !cancelled() && needs.web.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4

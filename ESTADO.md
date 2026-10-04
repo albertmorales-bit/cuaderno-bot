@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 6 (salidas diarias listas; experimento sin arrancar).
+Última actualización: 2026-10-04, fin de la Fase 7 (todo listo para el día 0; faltan los pasos del usuario).
 
 ## Hecho
 
@@ -64,6 +64,12 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
   longitud, comentario con enlaces, imagen e hilo semanal, generados cada día
   desde el registro (D-037). 102 tests.
 
+- **Fase 7 · Web de transparencia.** Panel estático sin dependencias con botón
+  "Verificar" (WebCrypto), verificación automática al cargar, curva completa,
+  todas las operaciones, decisiones con régimen y motivo, avisos y
+  pre-registro. Test de paridad JS-Python con Node. Despliegue de Pages en el
+  mismo workflow (D-038, D-039). 106 tests.
+
 ### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
@@ -74,7 +80,7 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 7 (web de transparencia), pre-registro y día 0; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
+- Pasos del usuario (`GUIA_PUBLICACION.md`), pre-registro y día 0; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
   uno nuevo que use los `.py` del repositorio.

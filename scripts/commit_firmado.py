@@ -25,7 +25,7 @@ import urllib.request
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
-CARPETAS = ("vivo", "web")   # lo único que el bot puede modificar
+CARPETAS = ("vivo",)   # lo único que el bot puede modificar
 
 
 def git(*args: str) -> str:

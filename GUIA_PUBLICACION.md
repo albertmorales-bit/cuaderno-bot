@@ -76,7 +76,10 @@ el commit del bot **no** aparece como *Verified*, avísame antes de seguir: con
 
 - *Settings* → *Actions* → *General*: deja Actions activadas.
 - *Settings* → *Pages* → *Source*: **GitHub Actions** (la web se despliega desde
-  el workflow; Fase 7).
+  el workflow). Las condiciones de GitHub Pages prohíben el uso comercial y los
+  esquemas de "hacerse rico rápido": la web es un registro de un experimento con
+  dinero ficticio y avisos visibles, sin venta ni captación.
+- Rellena `publicacion.json` con tu usuario (los enlaces del comentario diario).
 
 ## 6. Pre-registro (día 0, una sola vez)
 
