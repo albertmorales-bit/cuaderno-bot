@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 2.
+Última actualización: 2026-10-04, Fase 4 a medias (validación sin abrir).
 
 ## Hecho
 
@@ -45,6 +45,12 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
   fuerza, (B) en ninguno; la Fase 3 queda justificada por la regla
   (D-026). 71 tests.
 
+- **Fase 4 (parte 1) · Robustez en desarrollo.** Criterios de aceptación v1
+  commiteados antes de ejecutar (`06e7a06`). En desarrollo: meseta (C6 se
+  cumple), resiste costes x3, Sharpe deflactado de 0,93, unas 1,3 entradas y
+  10 órdenes esperadas en 90 días. Validación **sin abrir**, pendiente del
+  visto bueno del usuario.
+
 ### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
@@ -55,19 +61,19 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 3 (condicional, pendiente de decisión), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
+- Fase 4 parte 2 (abrir la validación), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
   uno nuevo que use los `.py` del repositorio.
 
 ## Decisiones abiertas (del usuario)
 
-1. Cómo seguir tras la Fase 2 (D-026): Fase 3 completa (reversión a la media + router), un único router de exposición como variante 9, o pasar directamente a la Fase 4 con la V8.
+1. Visto bueno a los criterios v1 (`informes/fase4/CRITERIOS_ACEPTACION.md`) para abrir la validación una sola vez.
 2. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
 
 Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
-taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01), conjunto
-Donchian 20/10 + 55/20 + 100/50 con objetivo de volatilidad del 40 % (D-023).
+taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01), V8 (D-023),
+sin Fase 3 (D-027).
 
 ## Cómo retomar
 
