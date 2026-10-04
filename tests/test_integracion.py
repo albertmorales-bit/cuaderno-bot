@@ -66,3 +66,13 @@ def test_historico_truncado_aborta_en_vez_de_seguir(monkeypatch):
     monkeypatch.setattr(main.ProveedorDatos, "obtener_datos", lambda self, params: corto)
     with pytest.raises(ValueError, match="cubre"):
         main.descargar(main.Configuracion(periodo_historico="3y"), "BTC/EUR")
+
+
+def test_datos_v1_en_disco_pasan_el_checksum():
+    """Solo comprueba que los datos congelados se cargan íntegros. NO ejecuta
+    la estrategia sobre ellos (eso contaría como mirar los datos)."""
+    for simbolo in ("BTC/EUR", "ETH/EUR"):
+        df = main.obtener_velas(main.Configuracion(fecha_fin="2022-01-01"), simbolo)
+        assert df.index.max() < pd.Timestamp("2022-01-01", tz="UTC")
+        assert df.index.is_monotonic_increasing and not df.index.duplicated().any()
+        assert set(df["fuente"].unique()) <= {"coinbase", "bitstamp"}

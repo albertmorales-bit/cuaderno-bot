@@ -36,6 +36,7 @@ from modulo_1_datos import (
     _parsear_periodo_a_dias,
     duracion_intervalo,
 )
+from modulo_1b_historico import cargar_historico
 from modulo_2_estrategia import Disparador, generar_senales
 from modulo_4_backtesting import (
     COMISION_TAKER_KRAKEN,
@@ -62,6 +63,14 @@ class Configuracion:
     Los valores marcados como PROVISIONAL dependen de decisiones abiertas
     (ver DECISIONES.md) y se fijarán en la Fase 1.
     """
+
+    # --- Origen de los datos (Fase 1) ---
+    # "disco": serie limpia versionada de datos/<version_datos>/, con
+    # verificación de checksum (lo normal para backtests, reproducible).
+    # "api": descarga en el momento (solo para inspección; la API de Kraken
+    # no da histórico largo).
+    fuente_datos: str = "disco"
+    version_datos: str = "v1"
 
     # --- Activo y temporalidad ---
     ticker: str = "BTC/EUR"
@@ -186,6 +195,23 @@ def parametros_backtest(
     )
 
 
+def obtener_velas(config: Configuracion, ticker: str) -> pd.DataFrame:
+    """Velas del activo según `config.fuente_datos`, recortadas a
+    [fecha_inicio, fecha_fin). Es la única puerta de entrada de datos."""
+    if config.fuente_datos == "disco":
+        datos = cargar_historico(ticker, config.intervalo, config.version_datos)
+        if config.fecha_inicio is not None:
+            datos = datos[datos.index >= pd.Timestamp(config.fecha_inicio, tz="UTC")]
+        if config.fecha_fin is not None:
+            datos = datos[datos.index < pd.Timestamp(config.fecha_fin, tz="UTC")]
+        if datos.empty:
+            raise ValueError(f"{ticker}: no hay velas en datos/{config.version_datos} para ese rango.")
+        return datos
+    if config.fuente_datos == "api":
+        return descargar(config, ticker)
+    raise ValueError(f"fuente_datos debe ser 'disco' o 'api', recibido '{config.fuente_datos}'.")
+
+
 def descargar(config: Configuracion, ticker: str) -> pd.DataFrame:
     """Descarga velas CERRADAS de un activo y comprueba su cobertura."""
     proveedor = ProveedorDatos(exchange_id=config.exchange_id)
@@ -238,8 +264,8 @@ def ejecutar_pipeline(config: Configuracion, datos: Optional[pd.DataFrame] = Non
     o sintéticas en los tests) en vez de descargarlas.
     """
     if datos is None:
-        logger.info("Etapa 1/3: descargando %s (%s)...", config.ticker, config.intervalo)
-        datos = descargar(config, config.ticker)
+        logger.info("Etapa 1/3: datos de %s (%s, %s)...", config.ticker, config.intervalo, config.fuente_datos)
+        datos = obtener_velas(config, config.ticker)
 
     logger.info("Etapa 2/3: señales (%s)...", config.disparador_entrada)
     df_senales = generar_senales(datos, **kwargs_senales(config))
@@ -317,7 +343,7 @@ def ejecutar_pipeline_multiactivo(
     senales_por_activo: dict[str, pd.DataFrame] = {}
     for ticker in config.activos:
         try:
-            datos = datos_por_activo[ticker] if datos_por_activo is not None else descargar(config, ticker)
+            datos = datos_por_activo[ticker] if datos_por_activo is not None else obtener_velas(config, ticker)
             senales_por_activo[ticker] = generar_senales(datos, **kwargs_senales(config))
         except Exception:
             logger.warning("Activo %s omitido del backtest combinado.", ticker, exc_info=True)
@@ -379,14 +405,7 @@ def diagnosticar_activo(config: Configuracion, ticker: str, datos: Optional[pd.D
     a filtro sobre el evento bruto de entrada del disparador configurado).
     """
     if datos is None:
-        proveedor = ProveedorDatos(exchange_id=config.exchange_id)
-        datos = proveedor.obtener_datos(
-            ParametrosDescarga(
-                ticker=ticker, tipo=config.tipo_activo, intervalo=config.intervalo,
-                periodo=config.periodo_historico, exchange_id=config.exchange_id,
-                fecha_inicio=config.fecha_inicio, fecha_fin=config.fecha_fin,
-            )
-        )
+        datos = obtener_velas(config, ticker)
 
     print(f"\n{'=' * 60}\nDIAGNÓSTICO: {ticker}\n{'=' * 60}")
     print(f"Velas: {len(datos)} | rango: {datos.index.min()} -> {datos.index.max()}")

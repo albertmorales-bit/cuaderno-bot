@@ -181,6 +181,11 @@ class ProveedorDatos:
     siempre entrega el mismo formato.
     """
 
+    # Velas que se avanza el cursor cuando un exchange devuelve un lote vacío
+    # antes del inicio de cotización (menor que el límite por petición más
+    # pequeño conocido, 300 en Coinbase, para no saltarse datos).
+    _VELAS_POR_SALTO = 250
+
     def __init__(self, exchange_id: str = "binance") -> None:
         # Instanciamos el cliente del exchange una sola vez y lo
         # reutilizamos (evita overhead de crear conexiones repetidas).
@@ -285,7 +290,8 @@ class ProveedorDatos:
 
         velas_acumuladas: list[list] = []
         cursor_ms = desde_ms
-        max_iteraciones = 200  # cinturón y tirantes: nunca más de 200 peticiones.
+        paso_ms = int(duracion_intervalo(timeframe).total_seconds() * 1000)
+        max_iteraciones = 400  # cinturón y tirantes: nunca más de 400 peticiones.
 
         for _ in range(max_iteraciones):
             if cursor_ms >= ahora_ms:
@@ -312,21 +318,30 @@ class ProveedorDatos:
                     ) from exc
                 raise
             if not lote:
+                if not velas_acumuladas:
+                    # Lote vacío ANTES de tener ningún dato: lo normal es que el
+                    # par aún no cotizara en esa fecha (p. ej. Coinbase BTC/EUR
+                    # empieza el 2015-04-23). Saltamos una ventana hacia delante
+                    # en vez de concluir que no hay datos (fallo hallado en la
+                    # Fase 1: la v4 se rendía aquí).
+                    cursor_ms += self._VELAS_POR_SALTO * paso_ms
+                    continue
                 break
 
-            if not velas_acumuladas and lote[0][0] > cursor_ms + 7 * 86_400_000:
+            if not velas_acumuladas and lote[0][0] > desde_ms + 7 * 86_400_000:
                 # Auditoría Fase 0 (P1): la API OHLC pública de Kraken solo
-                # devuelve las 720 velas MÁS RECIENTES e ignora `since`. Si el
-                # primer lote empieza más de una semana después de lo pedido,
-                # el histórico va a salir truncado sin ningún error visible.
-                logger.error(
-                    "%s: se pidió histórico desde %s pero '%s' devuelve la primera vela en "
-                    "%s. Este exchange probablemente no sirve histórico antiguo por API "
-                    "(Kraken: máx. 720 velas). El resultado estará TRUNCADO.",
+                # devuelve las 720 velas MÁS RECIENTES e ignora `since`. Si la
+                # primera vela llega más de una semana después de lo pedido,
+                # o el par empezó a cotizar entonces, o el histórico está
+                # truncado: el log no puede distinguirlo, así que lo avisa.
+                logger.warning(
+                    "%s: pedido desde %s, primera vela disponible en '%s': %s. O el par empezó "
+                    "a cotizar entonces, o el exchange no sirve histórico antiguo por API "
+                    "(Kraken: máx. 720 velas).",
                     params.ticker,
-                    pd.Timestamp(cursor_ms, unit="ms", tz="UTC"),
+                    pd.Timestamp(desde_ms, unit="ms", tz="UTC").date(),
                     self._exchange_id,
-                    pd.Timestamp(lote[0][0], unit="ms", tz="UTC"),
+                    pd.Timestamp(lote[0][0], unit="ms", tz="UTC").date(),
                 )
             velas_acumuladas.extend(lote)
             ultimo_timestamp = lote[-1][0]
@@ -382,6 +397,11 @@ class ProveedorDatos:
         varios módulos más adelante, mucho más difíciles de detectar.
         """
         df = df.copy()
+
+        # 0) Índice en UTC siempre (yfinance puede devolverlo sin zona
+        #    horaria); sin esto, comparar con fechas UTC lanzaría un error.
+        df.index = pd.DatetimeIndex(df.index)
+        df.index = df.index.tz_localize("UTC") if df.index.tz is None else df.index.tz_convert("UTC")
 
         # 1) Índice temporal ordenado y sin duplicados.
         df = df[~df.index.duplicated(keep="last")]

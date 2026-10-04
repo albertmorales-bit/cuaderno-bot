@@ -38,3 +38,38 @@ def test_normalizacion_quita_duplicados_y_precios_invalidos():
     limpio = ProveedorDatos._validar_y_normalizar(df, "TEST")
     assert limpio.index.is_monotonic_increasing
     assert list(limpio["Close"]) == [4.0, 6.0]  # duplicado: se queda el último; precio <= 0 fuera
+
+
+def test_normalizacion_pone_el_indice_en_utc():
+    df = pd.DataFrame({"Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 1.0, "Volume": 1.0},
+                      index=pd.to_datetime(["2024-01-01", "2024-01-02"]))  # sin zona horaria
+    assert str(ProveedorDatos._validar_y_normalizar(df, "TEST").index.tz) == "UTC"
+
+
+class _ExchangeFalso:
+    """Simula un exchange cuyo par empieza a cotizar en `inicio_ms` y que
+    devuelve como mucho `limite` velas por petición."""
+
+    rateLimit = 0
+
+    def __init__(self, inicio_ms, fin_ms, limite=300):
+        self.velas = [[t, 1.0, 1.0, 1.0, 1.0, 1.0] for t in range(inicio_ms, fin_ms, 86_400_000)]
+        self.limite = limite
+
+    def fetch_ohlcv(self, symbol, timeframe, since, limit):
+        fin = since + self.limite * 86_400_000
+        return [v for v in self.velas if since <= v[0] < fin][: self.limite]
+
+
+def test_paginacion_salta_el_periodo_anterior_a_la_cotizacion():
+    from modulo_1_datos import ParametrosDescarga, TipoActivo
+
+    inicio = int(pd.Timestamp("2015-04-23", tz="UTC").timestamp() * 1000)
+    fin = int(pd.Timestamp("2016-01-01", tz="UTC").timestamp() * 1000)
+    proveedor = ProveedorDatos.__new__(ProveedorDatos)
+    proveedor._exchange_id = "falso"
+    proveedor._exchange = _ExchangeFalso(inicio, fin)
+    df = proveedor._descargar_cripto(ParametrosDescarga(
+        "BTC/EUR", TipoActivo.CRIPTO, "1d", fecha_inicio="2014-01-01", fecha_fin="2016-01-01"))
+    assert df.index.min() == pd.Timestamp("2015-04-23", tz="UTC")
+    assert len(df) == (fin - inicio) // 86_400_000
