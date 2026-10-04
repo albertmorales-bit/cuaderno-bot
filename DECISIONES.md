@@ -129,3 +129,12 @@ variantes 1-6 acabaron, como tarde, el 2026-09-04 y empezaron antes del
 - El volumen de Coinbase está en unidades del activo (BTC, ETH), no en EUR. La
   estrategia no lo usa.
 - Sin histórico largo en 4h (D-001 se mantiene en diario).
+
+**D-019b · Corte de la reserva corregido a 2026-05-01** (sustituye a D-019).
+El usuario confirmó que las pruebas fueron después de marzo de 2026, y los
+accesos directos de Windows (`%APPDATA%\Microsoft\Windows\Recent`) fechan las
+7 versiones del cuaderno el 2026-09-04 entre las 20:48 y las 22:27, coherente
+con que la v4 terminara sus datos el 2026-09-04 20:00. Todas las variantes
+usaron la ventana de 720 velas de 4h 2026-05-07 → 2026-09-04. La reserva pasa a
+2024-07-01 → 2026-05-01 (669 velas). Supuesto declarado: no hubo ejecuciones en
+Colab anteriores a ese día que no dejaran rastro local.

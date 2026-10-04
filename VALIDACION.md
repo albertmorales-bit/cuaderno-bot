@@ -31,12 +31,14 @@ el 2018-07-03 en ETH.
 |-------|--------|---------------------------|----------------------------|-----|
 | Desarrollo | 2015-01-01 → 2022-01-01 | 2041 / 1278 | Tendencia 2016-17, oso 2018 (BTC -83 %, ETH -94 %), recuperación y lateral 2019, crash covid mar-2020, tendencia 2020-21 con caída de -52 % en may-jul 2021 | Todo el ajuste y el diagnóstico por regímenes |
 | Validación | 2022-01-01 → 2024-07-01 | 912 / 912 | Oso 2022 (BTC -64 % en el año), tendencia 2023 hasta el máximo de mar-2024 | Se abre UNA vez, con criterios congelados |
-| Reserva final | 2024-07-01 → 2026-03-01 | 608 / 608 | Corrección de 2024, tendencia hasta ene-2025, caída de -32 % a abr-2025, nuevo máximo oct-2025 y caída posterior | Se abre UNA vez, después del pre-registro |
-| Contaminado | 2026-03-01 → 2026-10-01 | 214 / 214 | Ventanas de ~120 días de las variantes 1-6 (la v4 cubrió 2026-05-07 → 2026-09-04; las anteriores, antes) | No cuenta como fuera de muestra |
+| Reserva final | 2024-07-01 → 2026-05-01 | 669 / 669 | Corrección de 2024, tendencia hasta ene-2025, caída de -32 % a abr-2025, nuevo máximo oct-2025 y caída posterior | Se abre UNA vez, después del pre-registro |
+| Contaminado | 2026-05-01 → 2026-10-01 | 153 / 153 | Ventana de las variantes 1-6: 2026-05-07 → 2026-09-04 (todas ejecutadas el 2026-09-04) | No cuenta como fuera de muestra |
 | Paper trading | 90 días en vivo | — | — | Única prueba totalmente limpia |
 
-El corte de la reserva en 2026-03-01 es conservador: no se sabe la fecha
-exacta de las primeras ejecuciones v1-v3. Si se conoce, puede ampliarse.
+Fecha de las variantes 1-6: los accesos directos de Windows muestran que las
+7 versiones del cuaderno se abrieron el 2026-09-04 entre las 20:48 y las 22:27,
+y las salidas de la v4 cubren 2026-05-07 → 2026-09-04 20:00. El corte en
+2026-05-01 deja una semana de margen (D-019).
 
 Límite: conocer de antemano la forma general de la validación y la reserva
 (p. ej. "2022 fue bajista") es una contaminación leve e inevitable, que se

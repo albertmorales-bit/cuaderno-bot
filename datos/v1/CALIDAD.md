@@ -40,8 +40,8 @@ Con 400 velas de calentamiento (D-010), el primer día operable es **2016-05-31*
 |-------|--------|------:|----------------:|
 | Desarrollo | 2015-01-01 → 2022-01-01 | 2441 | 2041 |
 | Validación | 2022-01-01 → 2024-07-01 | 912 | 912 |
-| Reserva final | 2024-07-01 → 2026-03-01 | 608 | 608 |
-| Contaminado (v1-v4) | 2026-03-01 → 2026-10-01 | 214 | 214 |
+| Reserva final | 2024-07-01 → 2026-05-01 | 669 | 669 |
+| Contaminado (v1-v4) | 2026-05-01 → 2026-10-01 | 153 | 153 |
 
 ### Mapa descriptivo de épocas
 
@@ -119,8 +119,8 @@ Con 400 velas de calentamiento (D-010), el primer día operable es **2018-07-03*
 |-------|--------|------:|----------------:|
 | Desarrollo | 2015-01-01 → 2022-01-01 | 1678 | 1278 |
 | Validación | 2022-01-01 → 2024-07-01 | 912 | 912 |
-| Reserva final | 2024-07-01 → 2026-03-01 | 608 | 608 |
-| Contaminado (v1-v4) | 2026-03-01 → 2026-10-01 | 214 | 214 |
+| Reserva final | 2024-07-01 → 2026-05-01 | 669 | 669 |
+| Contaminado (v1-v4) | 2026-05-01 → 2026-10-01 | 153 | 153 |
 
 ### Mapa descriptivo de épocas
 

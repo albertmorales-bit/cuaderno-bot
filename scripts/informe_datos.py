@@ -24,8 +24,8 @@ from modulo_1b_historico import RAIZ_DATOS, cargar_historico  # noqa: E402
 TRAMOS = [
     ("Desarrollo", "2015-01-01", "2022-01-01"),
     ("Validación", "2022-01-01", "2024-07-01"),
-    ("Reserva final", "2024-07-01", "2026-03-01"),
-    ("Contaminado (v1-v4)", "2026-03-01", "2026-10-01"),
+    ("Reserva final", "2024-07-01", "2026-05-01"),
+    ("Contaminado (v1-v4)", "2026-05-01", "2026-10-01"),
 ]
 VELAS_CALENTAMIENTO = 400
 UMBRAL_CICLO = 0.20   # caídas desde máximo histórico de más del 20 % se listan como ciclo
