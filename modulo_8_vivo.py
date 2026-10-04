@@ -303,9 +303,11 @@ class MotorVivo:
         detalle = ", ".join(f"{nombre} {'sí' if v else 'no'}" for nombre, v in estados)
         escala = float(fila["escala_volatilidad"])
         vol = self.config.objetivo_volatilidad / escala if 0 < escala < 1 else None
-        texto_vol = f"volatilidad de 30 días {vol:.0%}" if vol is not None else "volatilidad por debajo del objetivo"
+        texto_vol = (f"volatilidad de 30 días {vol * 100:.0f} %" if vol is not None
+                     else "volatilidad por debajo del objetivo")
+        escala_txt = f"{escala:.2f}".replace(".", ",")
         return (f"{sum(v for _, v in estados)} de {len(estados)} sistemas en tendencia ({detalle}); "
-                f"{texto_vol}, escala {escala:.2f}; exposición objetivo {objetivo:.0%}")
+                f"{texto_vol}, escala {escala_txt}; exposición objetivo {objetivo * 100:.0f} %")
 
     def _ciclo(self, par: str, t: pd.Timestamp, velas_api: pd.DataFrame, ahora) -> dict:
         archivo = self.archivo(par)

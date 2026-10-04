@@ -27,6 +27,7 @@ sys.path.insert(0, str(RAIZ))
 
 import main  # noqa: E402
 from modulo_8_vivo import CARTERAS, FuenteKraken, MotorVivo, ReglasSeguridad  # noqa: E402
+from modulo_9_salidas import generar_salidas  # noqa: E402
 
 logging.disable(logging.INFO)
 DIRECTORIO_VIVO = RAIZ / "vivo"
@@ -75,6 +76,11 @@ def main_diario() -> None:
         return
     resumen = motor.ejecutar(ahora)
     cerrar_si_procede(motor, reglas, ahora)
+    if any(c.get("completado") for c in resumen["ciclos"]):   # Fase 6: resumen, tuit, imagen e hilo del día
+        publicacion = json.loads((RAIZ / "publicacion.json").read_text(encoding="utf-8"))
+        carpeta = generar_salidas(Path(args.raiz), motor.config.comision_pct, motor.config.slippage_pct,
+                                  publicacion["url_web"], publicacion["url_repo"])
+        resumen["salidas"] = str(carpeta.relative_to(RAIZ)) if carpeta and carpeta.is_relative_to(RAIZ) else str(carpeta)
     resumen["dia"] = dia_del_experimento(motor)
     resumen["hash_dia"] = motor.registro.verificar().ultimo_hash
     ruta = Path(args.raiz) / "ultimo_resumen.json"
