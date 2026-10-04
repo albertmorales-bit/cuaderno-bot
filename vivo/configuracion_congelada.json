@@ -1,0 +1,92 @@
+{
+  "configuracion": {
+    "fuente_datos": "disco",
+    "version_datos": "v1",
+    "ticker": "BTC/EUR",
+    "tipo_activo": "cripto",
+    "exchange_id": "kraken",
+    "intervalo": "1d",
+    "periodo_historico": "3y",
+    "fecha_inicio": null,
+    "fecha_fin": null,
+    "activos": [
+      "BTC/EUR",
+      "ETH/EUR"
+    ],
+    "tamanos_minimos": {
+      "BTC/EUR": 5e-05,
+      "ETH/EUR": 0.001
+    },
+    "cobertura_minima_pct": 95.0,
+    "capital_inicial": 10000.0,
+    "riesgo_por_operacion": 0.01,
+    "ratio_riesgo_beneficio": 2.0,
+    "usar_take_profit": false,
+    "interes_compuesto": true,
+    "disparador_entrada": "ruptura_donchian",
+    "periodo_ruptura_entrada": 20,
+    "periodo_ruptura_salida": 10,
+    "ema_rapida": 20,
+    "ema_lenta": 50,
+    "periodo_atr": 14,
+    "periodo_rsi": 14,
+    "usar_filtro_rsi": false,
+    "permitir_cortos": false,
+    "atr_mult_stop_largo": 2.0,
+    "atr_mult_stop_corto": 1.5,
+    "factor_calentamiento_ema": 2.0,
+    "usar_filtro_macro": true,
+    "periodo_ema_macro": 200,
+    "usar_adx": false,
+    "periodo_adx": 14,
+    "umbral_adx": 18.0,
+    "comision_pct": 0.008,
+    "slippage_pct": 0.001,
+    "sistemas_donchian": [
+      [
+        20,
+        10
+      ],
+      [
+        55,
+        20
+      ],
+      [
+        100,
+        50
+      ]
+    ],
+    "objetivo_volatilidad": 0.4,
+    "ventana_volatilidad": 30,
+    "banda_reajuste": 0.1,
+    "velas_calentamiento": 400,
+    "fraccion_oos": 0.3,
+    "divisa": "€",
+    "periodos_por_anio": null,
+    "unidades_fraccionables": true,
+    "permitir_apalancamiento": false,
+    "ruta_grafico": "equity_drawdown.png"
+  },
+  "reglas": {
+    "parada_drawdown": 0.35,
+    "alerta_perdida_diaria": 0.1,
+    "alerta_perdida_semanal": 0.2,
+    "alerta_velas_perdidas_seguidas": 3,
+    "salto_sospechoso": 0.5,
+    "dias_experimento": 90
+  },
+  "carteras": [
+    {
+      "nombre": "V8",
+      "exposicion_fija": null
+    },
+    {
+      "nombre": "FIJO30",
+      "exposicion_fija": 0.3
+    }
+  ],
+  "pares": [
+    "BTC/EUR",
+    "ETH/EUR"
+  ]
+}
