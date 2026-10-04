@@ -1,0 +1,5 @@
+# Finales de línea LF en todas las plataformas: los checksums de datos y la
+# cadena de hashes del registro deben ser idénticos en Windows, Colab y Actions.
+* text=auto eol=lf
+*.parquet binary
+*.png binary
