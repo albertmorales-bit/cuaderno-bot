@@ -200,3 +200,8 @@ independientes en desarrollo y la validación de una sola vez.
 
 **D-029 · El test de repetición (backtest = vivo) pasa a la Fase 5**, donde se
 construye el motor en vivo. Será condición para arrancar el día 1.
+
+**D-030 · Veredicto de la validación: NO APTO** (2026-10-04, commit de
+apertura e594140). Falla C4 (coherencia por activo: en BTC no bate a comprar y
+mantener con la misma exposición). No se modifica ningún criterio ni parámetro
+a posteriori. La reserva final sigue cerrada. Cómo seguir: decisión del usuario.

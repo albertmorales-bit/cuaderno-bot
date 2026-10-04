@@ -2,7 +2,7 @@
 
 > Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.
 
-Estado: **solo resultados del tramo de desarrollo** (Fase 2, `informes/fase2/RESULTADOS.md`). Ninguno es fuera de muestra. Los criterios de aceptación se
+Estado: **validación abierta el 2026-10-04 · veredicto NO APTO** (`informes/fase4/VALIDACION_RESULTADOS.md`). Criterios: `informes/fase4/CRITERIOS_ACEPTACION.md` v1. Reserva final sin abrir. Los criterios de aceptación se
 fijarán y versionarán aquí ANTES de abrir el tramo de validación (Fase 4).
 
 ## Contador de variantes evaluadas
@@ -16,7 +16,19 @@ número es el que se pasa a `significancia.py --variantes`.
 | 7 | v5: Donchian 20/10 + EMA200, solo largos | datos/v1, desarrollo | BTC: CAGR +17 %, Sharpe 1,42, DD -11 %, 22 ops · ETH: +12 %, 1,10, -10 %, 13 ops | 2026-10-04 |
 | 8 | Conjunto Donchian 20/10 + 55/20 + 100/50, objetivo de volatilidad 40 %, solo largos | datos/v1, desarrollo | BTC: CAGR +60 %, Sharpe 1,66, DD -35 %, 13 episodios · ETH: +52 %, 1,53, -21 %, 9 episodios (B&H: Sharpe 1,41 / 1,11; DD -83 % / -83 %) | 2026-10-04 |
 
-**Total actual: 8.** Las variantes 1-6 compartieron una ventana de ~4 meses y
+**Total actual: 8.**
+
+### Validación de la variante 8 (2022-01-01 → 2024-07-01, cartera 50/50)
+
+| | V8 | Comprar y mantener 100 % | Comprar y mantener ~30 % |
+|---|---:|---:|---:|
+| Rentabilidad total | +22,6 % | +15,7 % | +17,5 % |
+| Sharpe | 0,48 | 0,39 | 0,46 |
+| Caída máxima | -23 % | -66 % | -24 % |
+
+C1, C2, C3, C5, C6 y C7 se cumplen; **C4 no** (BTC: Sharpe 0,46 frente a 0,59
+de comprar y mantener con la misma exposición). Sharpe deflactado 0,24;
+P(Sharpe > ~30 % fijo) = 0,49. **NO APTO.** Las variantes 1-6 compartieron una ventana de ~4 meses y
 costes irreales (0,06 % + 0,02 %), así que su "NO APTO" es débil, pero se dan
 por cerradas y NO se vuelven a ejecutar (cada nueva mirada contaría como otra
 variante).

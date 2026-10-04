@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, Fase 4 a medias (validación sin abrir).
+Última actualización: 2026-10-04, fin de la Fase 4 · veredicto NO APTO.
 
 ## Hecho
 
@@ -48,8 +48,10 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 - **Fase 4 (parte 1) · Robustez en desarrollo.** Criterios de aceptación v1
   commiteados antes de ejecutar (`06e7a06`). En desarrollo: meseta (C6 se
   cumple), resiste costes x3, Sharpe deflactado de 0,93, unas 1,3 entradas y
-  10 órdenes esperadas en 90 días. Validación **sin abrir**, pendiente del
-  visto bueno del usuario.
+  10 órdenes esperadas en 90 días.
+- **Fase 4 (parte 2) · Validación abierta una vez (2022-01 → 2024-07): NO APTO.**
+  Gana dinero y recorta la caída a un tercio, pero no bate a tener un ~30 % fijo
+  (C4 falla en BTC; DSR 0,24). Reserva final sin abrir (D-030).
 
 ### Añadido (Fase 0)
 
@@ -61,19 +63,19 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 4 parte 2 (abrir la validación), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
+- Decidir cómo seguir tras el NO APTO; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
   uno nuevo que use los `.py` del repositorio.
 
 ## Decisiones abiertas (del usuario)
 
-1. Visto bueno a los criterios v1 (`informes/fase4/CRITERIOS_ACEPTACION.md`) para abrir la validación una sola vez.
+1. Cómo seguir tras el NO APTO (D-030): paper trading igualmente, etiquetado como NO APTO y comparado en vivo con el ~30 % fijo; rediseñar (versión nueva, con solo la reserva y el directo como fuera de muestra); o cerrar la serie con "probamos esto y no funcionó".
 2. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
 
 Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
 taker 0,80 %, tramos de `VALIDACION.md` (reserva hasta 2026-05-01), V8 (D-023),
-sin Fase 3 (D-027).
+sin Fase 3 (D-027), criterios v1 (D-028).
 
 ## Cómo retomar
 
