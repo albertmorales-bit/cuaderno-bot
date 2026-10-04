@@ -85,3 +85,47 @@ del mínimo del exchange (BTC 0,00005; ETH 0,001, Kraken vía ccxt).
 **D-015 · No se ejecuta la v5 con datos reales en la Fase 0.** Los únicos datos
 reales a mano (Kraken, ~2 años en diario) caen en el tramo que se propone
 reservar como validación final; mirarlos ahora los contaminaría.
+
+## Fase 1 (2026-10-04)
+
+**D-016 · Fuentes del histórico diario.** Sondeadas: yfinance, Coinbase
+Exchange, Bitstamp, Bitfinex, Bitvavo, Gemini, Kraken. Elegidas:
+- **Coinbase Exchange como principal**: exchange real en EUR con la historia más
+  larga (BTC/EUR desde 2015-04-23, ETH/EUR desde 2017-05-23). Coincide con
+  Kraken (el exchange del paper trading) en los 717 días comunes: mediana de
+  diferencia de cierre 0,02 %, máximo 0,24 %.
+- **Bitstamp como respaldo y contraste** (BTC desde 2016-04, ETH desde 2017-08).
+- **yfinance solo como contraste**: es un agregado, no un mercado operable, y
+  tiene 296 velas de BTC-EUR y 82 de ETH-EUR con OHLC incoherente (máximo por
+  debajo del cierre, etc.).
+- **Kraken solo como contraste** de los últimos 720 días.
+
+**D-017 · Reglas de la serie limpia.** Nunca se interpola. Un hueco se rellena
+con la vela del respaldo y queda marcado en la columna `fuente`. Los huecos sin
+respaldo de los primeros 30 días (arranque del par) recortan el inicio. Un OHLC
+incoherente se sustituiría por el respaldo (no hubo ninguno en Coinbase).
+Resultado: BTC 4175 velas (1 rellenada con Bitstamp: 2016-07-12; inicio
+recortado al 2015-04-27); ETH 3412 velas (inicio recortado al 2017-05-29).
+
+**D-018 · Datos congelados y verificables.** `datos/v1` termina el 2026-10-01
+(exclusiva). CSV deterministas (formato fijo, LF) con SHA-256 en
+`MANIFIESTO.json`, que también registra el commit del código y si el árbol
+estaba limpio. `cargar_historico` se niega a cargar un archivo que no coincida.
+Una versión nunca se sobrescribe. Dos descargas independientes dieron los 10
+checksums idénticos.
+
+**D-019 · Tramos.** La reserva final termina el 2026-03-01 (no a mitad de 2026)
+y desde ahí se marca como contaminado, porque las ventanas de ~120 días de las
+variantes 1-6 acabaron, como tarde, el 2026-09-04 y empezaron antes del
+2026-05-07 en las ejecuciones anteriores a la v4.
+
+**D-020 · Limitaciones aceptadas de los datos.**
+- Coinbase BTC/EUR era muy poco líquido en 2015 (volumen mediano ~61.000 €/día;
+  el flash crash del 18-ago-2015 no aparece hasta el día siguiente). Ese año
+  solo se usa como calentamiento: el primer día operable es el 2016-05-31.
+- En diciembre de 2017 los exchanges en EUR divergieron hasta un 9 %: era una
+  prima real entre mercados, no un error. Un backtest con precios de Coinbase
+  en ese mes no habría tenido los mismos precios en Kraken.
+- El volumen de Coinbase está en unidades del activo (BTC, ETH), no en EUR. La
+  estrategia no lo usa.
+- Sin histórico largo en 4h (D-001 se mantiene en diario).

@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 0.
+Última actualización: 2026-10-04, fin de la Fase 1.
 
 ## Hecho
 
@@ -26,7 +26,15 @@
 No se encontró lookahead en el cálculo de indicadores ni en la ejecución por
 señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
-### Añadido
+- **Fase 1 · Datos largos.** `datos/v1`: BTC/EUR diario 2015-04-27 → 2026-09-30
+  (4175 velas) y ETH/EUR 2017-05-29 → 2026-09-30 (3412), Coinbase como
+  principal, contrastado con Bitstamp, yfinance y Kraken. Sin huecos, con
+  checksums verificados y reproducibles. Informe en `datos/v1/CALIDAD.md`;
+  decisiones D-016 a D-020. Durante la fase se encontró y corrigió un fallo del
+  paginador de ccxt (un lote vacío antes del inicio de cotización cortaba la
+  descarga).
+
+### Añadido (Fase 0)
 
 - v5 Donchian 20/10 (Turtle) con canal `shift(1)` (D-009).
 - Partición dentro/fuera de muestra con embargo (`particionar_resultado`,
@@ -36,7 +44,7 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Fase 1 (datos largos versionados), 1b (investigación), 2 (regímenes),
+- Fase 1b (investigación), 2 (regímenes),
   3 (condicional), 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
   7 (web de transparencia).
 - El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
@@ -44,10 +52,11 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Decisiones abiertas (del usuario)
 
-1. Temporalidad diaria (D-001), universo BTC/ETH en EUR (D-002), solo largos (D-003): aplicadas como provisionales.
-2. Costes: Kraken taker 0,80 % o simular otro exchange (D-005).
-3. Tramos de datos de `VALIDACION.md`.
-4. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
+1. Fecha de la primera ejecución de las variantes v1-v3 (para afinar el corte de la reserva, D-019).
+2. Email público en los commits: cambiar a *noreply* de GitHub antes del primer push.
+
+Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
+taker 0,80 %, tramos de `VALIDACION.md`.
 
 ## Cómo retomar
 
