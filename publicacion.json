@@ -1,5 +1,5 @@
 {
-  "_nota": "Enlaces del comentario diario en X. Sustituye TU_USUARIO por tu usuario de GitHub antes del día 0. No forma parte de la configuración congelada (no afecta a la estrategia).",
-  "url_web": "https://TU_USUARIO.github.io/cuaderno-bot/",
-  "url_repo": "https://github.com/TU_USUARIO/cuaderno-bot"
+  "_nota": "Enlaces del comentario diario en X. No forma parte de la configuración congelada (no afecta a la estrategia).",
+  "url_web": "https://albertmorales-bit.github.io/cuaderno-bot/",
+  "url_repo": "https://github.com/albertmorales-bit/cuaderno-bot"
 }
