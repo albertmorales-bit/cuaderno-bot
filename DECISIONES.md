@@ -293,3 +293,8 @@ capital y comisiones describan el mismo instante. Cambian `modulo_9_salidas.py`,
 hashes y comprobación en `CAMBIOS.md`. Decisión del usuario: corregirlo con fe
 de erratas pública, sin reiniciar el contador, porque la estrategia, la
 configuración y el registro no cambian.
+
+**D-041 · Rediseño visual de la web** (2026-10-05, a petición del usuario) con
+la identidad del Auditor y una portada para capturas de escritorio. Contexto de
+producto en `PRODUCT.md`. Solo presentación: cálculo y verificación idénticos.
+Detalle y hashes en `CAMBIOS.md` (cambio 2).

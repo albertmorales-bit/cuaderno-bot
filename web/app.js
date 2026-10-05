@@ -16,9 +16,9 @@ const DIAS = 90;
 const GENESIS = "0".repeat(64);
 const SUFIJO = /^(.*),"hash":"([0-9a-f]{64})"}$/;
 const CARTERAS = [
-  { id: "V8", nombre: "V8 (estrategia)", corto: "V8", color: "var(--v8)" },
-  { id: "FIJO30", nombre: "30 % fijo", corto: "30 % fijo", color: "var(--fijo30)" },
-  { id: "BH100", nombre: "Comprar y mantener", corto: "Comprar y mantener", color: "var(--bh100)" },
+  { id: "V8", nombre: "V8, la estrategia", corto: "V8", color: "var(--serie-v8)" },
+  { id: "FIJO30", nombre: "30 % fijo", corto: "30 % fijo", color: "var(--serie-fijo)" },
+  { id: "BH100", nombre: "Comprar y mantener", corto: "Comprar y mantener", color: "var(--serie-bh)" },
 ];
 const ETIQUETA = { debil: "débil" };
 
@@ -164,47 +164,66 @@ function calcular(eventos, costes) {
 }
 
 // ------------------------------------------------------------ renderizado
-function tarjetas(c) {
-  const cont = el("tarjetas");
-  cont.replaceChildren();
-  for (const cart of CARTERAS) {
-    const r = c.resumen[cart.id];
-    const clase = (x) => (x > 0 ? "sube" : x < 0 ? "baja" : "");
-    const dl = crear("dl");
-    const filas = [
-      ["Hoy", `${eurSigno(r.hoy)} (${pct(r.hoyPct, 2, true)})`, clase(r.hoy)],
-      ["Desde el inicio", pct(r.acumulado, 2, true), clase(r.acumulado)],
-      ["Caída actual", pct(r.caidaActual), ""],
-      ["Caída máxima", pct(r.caidaMaxima), ""],
-      ["Invertido", pct(r.exposicion, 0), ""],
-    ];
-    if (cart.id !== "BH100") filas.push(["Comisiones", eur(r.comisiones, 2), ""]);
-    for (const [k, v, cl] of filas) dl.append(crear("dt", { texto: k }), crear("dd", { texto: v, clase: cl }));
-    const t = crear("article", { clase: "tarjeta", style: `--color:${cart.color}` },
-      [crear("p", { clase: "nombre", texto: cart.nombre }), crear("p", { clase: "valor", texto: eur(r.equity) }), dl]);
-    cont.append(t);
-  }
+const signo = (x) => (x > 0 ? "sube" : x < 0 ? "baja" : "");
+
+function portada(c) {
   el("dia").textContent = `Día ${c.dia}`;
-  const fin = c.fin ? " · experimento terminado" : "";
-  el("actualizado").textContent = `${c.ultimaDecision ? `Valores tras la apertura del ${fechaLarga(c.fechas.at(-1))} (decisión del cierre del ${fechaLarga(c.ultimaDecision)})` : "Aún sin decisiones"} · último evento ${c.ultimoTs.replace("T", " ").replace("Z", " UTC")}${fin}`;
+  const v8 = c.resumen.V8;
+  el("v8-valor").textContent = eur(v8.equity);
+  const datos = [
+    ["Hoy", `${eurSigno(v8.hoy)} (${pct(v8.hoyPct, 2, true)})`, signo(v8.hoy)],
+    ["Desde el inicio", pct(v8.acumulado, 2, true), signo(v8.acumulado)],
+    ["Caída desde máximo", pct(v8.caidaActual), ""],
+    ["Invertido", pct(v8.exposicion, 0), ""],
+  ];
+  el("v8-datos").replaceChildren(...datos.map(([k, v, cl]) =>
+    crear("div", {}, [crear("dt", { texto: k }), crear("dd", { texto: v, clase: cl })])));
+  el("rivales").replaceChildren(...CARTERAS.filter((k) => k.id !== "V8").map((k) => {
+    const r = c.resumen[k.id];
+    return crear("div", { clase: "rival", style: `--color:${k.color}` }, [
+      crear("p", { clase: "rival__nombre", texto: k.nombre }),
+      crear("p", { clase: "rival__valor", texto: eur(r.equity) }),
+      crear("p", { clase: "rival__delta" }, [crear("span", { clase: signo(r.hoy), texto: `${eurSigno(r.hoy)} hoy` }),
+        `  caída ${pct(r.caidaActual)}`]),
+    ]);
+  }));
+  // Pista de 90 días: hecho, con orden de la V8, y el día actual.
+  const conOrden = new Set(c.ejecuciones.filter((o) => o.cartera === "V8").map((o) => o.fecha_decision));
+  const pista = el("pista");
+  pista.replaceChildren();
+  for (let i = 0; i < DIAS; i++) {
+    const f = c.fechasDecision[i];
+    const hecho = i < c.dia;
+    const clases = [hecho ? (conOrden.has(f) ? "orden" : "hecho") : "", i === c.dia - 1 ? "hoy" : ""].join(" ").trim();
+    pista.append(crear("i", { clase: clases, title: hecho ? `Día ${i + 1}: cierre del ${fechaLarga(f)}${conOrden.has(f) ? ", con órdenes" : ""}` : `Día ${i + 1}` }));
+  }
+  pista.append(crear("div", { clase: "pista__leyenda" }, [
+    crear("span", {}, [crear("b", { style: "background:var(--accent)" }), "con órdenes"]),
+    crear("span", {}, [crear("b", { style: "background:var(--line-strong)" }), "sin órdenes"]),
+    crear("span", { texto: `${DIAS - c.dia} días por delante` }),
+  ]));
+  pista.setAttribute("aria-label", `Día ${c.dia} de ${DIAS}: ${conOrden.size} días con órdenes`);
+  const fin = c.fin ? " El experimento ha terminado." : "";
+  el("actualizado").textContent = c.ultimaDecision
+    ? `Valor tras ejecutar las órdenes en la apertura del ${fechaLarga(c.fechas.at(-1))} (decisión al cierre del ${fechaLarga(c.ultimaDecision)}), con comisiones y slippage.${fin}`
+    : "El experimento acaba de empezar: aún no hay ninguna decisión.";
 }
 
 function avisos(c) {
   const cont = el("avisos");
   cont.replaceChildren();
   for (const p of c.paradas) {
-    cont.append(crear("div", { clase: "aviso critico", texto: `Experimento DETENIDO el ${fechaLarga(p.fecha)} por la regla de parada pre-registrada (caída de ${pct(p.drawdown)}).` }));
+    cont.append(crear("div", { clase: "aviso critico", texto: `Experimento DETENIDO el ${fechaLarga(p.fecha)} por la regla de parada pre-registrada (caída del ${pct(p.drawdown)}).` }));
   }
   if (c.velasPerdidas.length) {
     const lista = c.velasPerdidas.map((v) => `${v.par.split("/")[0]} ${fechaLarga(v.fecha)}`).join(", ");
-    cont.append(crear("div", { clase: "aviso", texto: `Velas perdidas (el bot no se ejecutó y no se operó a posteriori): ${c.velasPerdidas.length} · ${lista}` }));
+    cont.append(crear("div", { clase: "aviso", texto: `Velas perdidas (el bot no se ejecutó y no se operó a posteriori): ${c.velasPerdidas.length}. ${lista}.` }));
   }
-  const recientes = c.alertas.slice(-5);
-  for (const a of recientes) {
-    const que = a.regla === "perdida_diaria" ? `pérdida diaria de ${pct(a.variacion)} en ${a.cartera}`
-      : a.regla === "perdida_semanal" ? `pérdida semanal de ${pct(a.variacion)} en ${a.cartera}`
+  for (const a of c.alertas.slice(-5)) {
+    const que = a.regla === "perdida_diaria" ? `pérdida diaria del ${pct(a.variacion)} en ${a.cartera}`
+      : a.regla === "perdida_semanal" ? `pérdida semanal del ${pct(a.variacion)} en ${a.cartera}`
       : a.motivo || a.regla;
-    cont.append(crear("div", { clase: "aviso", texto: `Aviso (${a.fecha ? fechaLarga(a.fecha) : ""}): ${que}.` }));
+    cont.append(crear("div", { clase: "aviso", texto: `Aviso${a.fecha ? ` del ${fechaLarga(a.fecha)}` : ""}: ${que}.` }));
   }
 }
 
@@ -224,16 +243,17 @@ function ticksLimpios(min, max, n = 5) {
 }
 
 const graficos = [];
+let primerDibujo = true;
 function graficoLineas(contenedor, c, series, opciones) {
   const ancho = contenedor.clientWidth || 600, alto = contenedor.clientHeight || 300;
-  // Mismo margen derecho en todos los gráficos para que un día caiga en la misma vertical en los dos.
-  const margen = { izq: opciones.margenIzq, der: ancho < 520 ? 12 : 150, arr: 10, aba: 26 };
+  // Mismo margen derecho en los dos gráficos: un día cae en la misma vertical en ambos.
+  const margen = { izq: 64, der: ancho < 520 ? 10 : 132, arr: 8, aba: opciones.sinEjeX ? 6 : 24 };
   const w = ancho - margen.izq - margen.der, h = alto - margen.arr - margen.aba;
   const n = c.fechas.length;
   const valores = series.flatMap((s) => s.valores);
   let min = Math.min(...valores, opciones.minimo ?? Infinity), max = Math.max(...valores, opciones.maximo ?? -Infinity);
   if (max - min < opciones.rangoMinimo) { const m = (max + min) / 2; min = m - opciones.rangoMinimo / 2; max = m + opciones.rangoMinimo / 2; }
-  const ticks = ticksLimpios(min, max, opciones.nTicks || 5);
+  const ticks = ticksLimpios(min, max, opciones.nTicks || 4);
   min = Math.min(min, ticks[0]); max = Math.max(max, ticks.at(-1));
   const x = (i) => margen.izq + (n === 1 ? w / 2 : (i / (n - 1)) * w);
   const y = (v) => margen.arr + (1 - (v - min) / (max - min)) * h;
@@ -242,34 +262,46 @@ function graficoLineas(contenedor, c, series, opciones) {
   const rej = nodo("g", { class: "rejilla" }), eje = nodo("g", { class: "eje" });
   for (const t of ticks) {
     rej.append(nodo("line", { x1: margen.izq, x2: margen.izq + w, y1: y(t), y2: y(t) }));
-    const txt = nodo("text", { x: margen.izq - 8, y: y(t) + 4, "text-anchor": "end" });
+    const txt = nodo("text", { x: margen.izq - 10, y: y(t) + 4, "text-anchor": "end" });
     txt.textContent = opciones.formatoY(t);
     eje.append(txt);
   }
-  const pasoX = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(w / 80))));
-  for (let i = 0; i < n; i += pasoX) {
-    const txt = nodo("text", { x: x(i), y: alto - 6, "text-anchor": "middle" });
-    txt.textContent = fechaCorta(c.fechas[i]);
-    eje.append(txt);
+  if (!opciones.sinEjeX) {
+    const pasoX = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(w / 90))));
+    for (let i = 0; i < n; i += pasoX) {
+      const txt = nodo("text", { x: x(i), y: alto - 4, "text-anchor": n === 1 ? "middle" : i === 0 ? "start" : "middle" });
+      txt.textContent = fechaCorta(c.fechas[i]);
+      eje.append(txt);
+    }
   }
   svg.append(rej, eje);
   if (opciones.lineaBase !== undefined) svg.append(nodo("line", { class: "base", x1: margen.izq, x2: margen.izq + w, y1: y(opciones.lineaBase), y2: y(opciones.lineaBase) }));
+  const trazos = [];
   for (const s of series) {
     const d = s.valores.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
     if (opciones.area) svg.append(nodo("path", { class: "area", d: `${d}L${x(n - 1)},${y(0)}L${x(0)},${y(0)}Z`, fill: s.color }));
-    svg.append(nodo("path", { class: "linea", d, stroke: s.color, "stroke-width": s.ancho || 2 }));
+    const p = nodo("path", { class: "linea", d, stroke: s.color, "stroke-width": s.ancho || 2 });
+    svg.append(p);
+    trazos.push(p);
     if (n < 4) s.valores.forEach((v, i) => svg.append(nodo("circle", { class: "punto", cx: x(i), cy: y(v), r: 4, fill: s.color })));
   }
-  // Etiquetas al final de las líneas (texto en tinta, nunca en el color de la serie), separadas si chocan.
-  if (opciones.etiquetas && margen.der > 12) {
+  if (opciones.titulo) {
+    const t = nodo("text", { class: "eje", x: margen.izq, y: margen.arr + 10 });
+    t.textContent = opciones.titulo;
+    t.setAttribute("fill", "var(--text-3)");
+    t.setAttribute("style", "font: 400 11.5px var(--font)");
+    svg.append(t);
+  }
+  // Etiquetas al final de cada línea (texto en tinta, nunca en el color de la serie), separadas si chocan.
+  if (opciones.etiquetas && margen.der > 10) {
     const fin = series.map((s) => ({ s, v: s.valores.at(-1) })).sort((a, b) => b.v - a.v);
     let previa = -Infinity;
     for (const { s, v } of fin) {
-      const yy = Math.max(y(v), previa + 16);
+      const yy = Math.max(y(v), previa + 18);
       previa = yy;
-      if (Math.abs(yy - y(v)) > 1) svg.append(nodo("line", { class: "base", x1: x(n - 1), y1: y(v), x2: x(n - 1) + 8, y2: yy }));
-      const txt = nodo("text", { class: "etiqueta-final", x: x(n - 1) + 10, y: yy + 4 });
-      txt.textContent = `${s.corto} ${opciones.formatoY(v)}`;
+      if (Math.abs(yy - y(v)) > 1) svg.append(nodo("line", { class: "base", x1: x(n - 1) + 4, y1: y(v), x2: x(n - 1) + 12, y2: yy }));
+      const txt = nodo("text", { class: `etiqueta-final${s.principal ? " principal" : ""}`, x: x(n - 1) + 14, y: yy + 4 });
+      txt.textContent = `${s.corto}  ${opciones.formatoY(v)}`;
       svg.append(txt);
     }
   }
@@ -277,7 +309,16 @@ function graficoLineas(contenedor, c, series, opciones) {
   const puntos = series.map((s) => nodo("circle", { class: "punto", r: 4.5, fill: s.color, visibility: "hidden" }));
   svg.append(cursor, ...puntos);
   contenedor.replaceChildren(svg);
-  graficos.push({ contenedor, x, y, n, series, cursor, puntos, margen, w, formato: opciones.formatoTooltip, c });
+  // Un único momento de movimiento: la curva de la V8 se traza al cargar (no en cada redibujo).
+  if (primerDibujo && opciones.trazar && n > 1) {
+    const principal = trazos[series.findIndex((s) => s.principal)];
+    if (principal) {
+      const largo = principal.getTotalLength();
+      principal.style.setProperty("--largo", `${largo}`);
+      principal.classList.add("dibujar");
+    }
+  }
+  graficos.push({ contenedor, x, y, n, series, cursor, puntos, margen, w, c });
 }
 
 function mostrarCursor(i, evento) {
@@ -291,22 +332,19 @@ function mostrarCursor(i, evento) {
   }
   if (i === null) { tt.hidden = true; return; }
   const c = graficos[0].c;
-  tt.replaceChildren(crear("div", { clase: "fecha", texto: `Apertura del ${fechaLarga(c.fechas[i])}${i === 0 ? " (día 0)" : ""}` }));
+  tt.replaceChildren(crear("div", { clase: "fecha", texto: `Apertura del ${fechaLarga(c.fechas[i])}${i === 0 ? " (día 0)" : ` (día ${i})`}` }));
   for (const cart of CARTERAS) {
-    const v = c.serie[cart.id][i];
-    const caida = c.resumen[cart.id].caidas[i];
     tt.append(crear("div", { clase: "fila" }, [
-      crear("span", {}, [crear("i", { style: `--color:${cart.color}` }), ` ${cart.corto}`]),
-      crear("span", { texto: `${eur(v)} · caída ${pct(caida)}` }),
+      crear("span", {}, [crear("i", { style: `--color:${cart.color}` }), cart.corto]),
+      crear("span", { texto: `${eur(c.serie[cart.id][i])}  caída ${pct(c.resumen[cart.id].caidas[i])}` }),
     ]));
   }
   tt.hidden = false;
   const r = graficos[0].contenedor.getBoundingClientRect();
   const px = evento && "clientX" in evento ? evento.clientX : r.left + graficos[0].x(i);
   const py = evento && "clientY" in evento ? evento.clientY : r.top + 20;
-  const izquierda = Math.min(window.innerWidth - tt.offsetWidth - 12, px + 14);
-  tt.style.left = `${Math.max(12, izquierda)}px`;
-  tt.style.top = `${Math.max(12, py - tt.offsetHeight - 14)}px`;
+  tt.style.left = `${Math.max(12, Math.min(window.innerWidth - tt.offsetWidth - 12, px + 16))}px`;
+  tt.style.top = `${Math.max(12, py - tt.offsetHeight - 16)}px`;
 }
 
 function interaccion() {
@@ -334,69 +372,67 @@ function interaccion() {
 
 function dibujar(c) {
   graficos.length = 0;
-  const leyenda = el("leyenda");
-  leyenda.replaceChildren(...CARTERAS.map((k) => crear("span", {}, [crear("i", { style: `--color:${k.color}` }), k.nombre])));
+  el("leyenda").replaceChildren(...CARTERAS.map((k) => crear("span", {}, [crear("i", { style: `--color:${k.color}` }), k.nombre])));
   graficoLineas(el("grafico-capital"), c,
-    CARTERAS.slice().reverse().map((k) => ({ valores: c.serie[k.id], color: k.color, corto: k.corto, ancho: k.id === "BH100" ? 1.5 : 2 })),
-    { margenIzq: 72, formatoY: (v) => eur(v), rangoMinimo: 400, lineaBase: CAPITAL, etiquetas: true });
+    CARTERAS.slice().reverse().map((k) => ({ valores: c.serie[k.id], color: k.color, corto: k.corto, principal: k.id === "V8", ancho: k.id === "BH100" ? 1.5 : k.id === "V8" ? 2.75 : 2 })),
+    { formatoY: (v) => eur(v), rangoMinimo: 400, lineaBase: CAPITAL, etiquetas: true, trazar: true, sinEjeX: true });
   graficoLineas(el("grafico-caida"), c,
     CARTERAS.filter((k) => k.id !== "BH100").map((k) => ({ valores: c.resumen[k.id].caidas.map((d) => -d * 100), color: k.color, corto: k.corto })),
-    { margenIzq: 72, formatoY: (v) => `${nf0.format(v)} %`, rangoMinimo: 2, maximo: 0, area: true, nTicks: 3 });
+    { formatoY: (v) => `${nf0.format(v)} %`, rangoMinimo: 2, maximo: 0, area: true, nTicks: 2 });
+  primerDibujo = false;
   interaccion();
 }
 
 function tablaCapital(c) {
-  const t = el("tabla-capital");
   const cab = crear("tr", {}, [crear("th", { texto: "Apertura" }), ...CARTERAS.flatMap((k) => [crear("th", { texto: k.corto }), crear("th", { texto: "Caída" })])]);
   const filas = c.fechas.map((f, i) => crear("tr", {}, [crear("td", { texto: fechaLarga(f) + (i === 0 ? " (día 0)" : "") }),
     ...CARTERAS.flatMap((k) => [crear("td", { texto: eur(c.serie[k.id][i], 2) }), crear("td", { texto: pct(c.resumen[k.id].caidas[i]) })])]));
-  t.replaceChildren(crear("caption", { texto: "Valor de cada cartera tras ejecutar las órdenes del día, a precio de apertura (incluye comisiones y slippage)" }), crear("thead", {}, [cab]), crear("tbody", {}, filas.reverse()));
+  el("tabla-capital").replaceChildren(crear("caption", { texto: "Valor de cada cartera tras ejecutar las órdenes del día, a precio de apertura (con comisiones y slippage)" }), crear("thead", {}, [cab]), crear("tbody", {}, filas.reverse()));
 }
 
 function decisiones(c) {
   const cont = el("decision-hoy");
   cont.replaceChildren();
   const hoy = c.decisiones.filter((d) => d.cartera === "V8" && d.fecha === c.ultimaDecision);
-  if (!hoy.length) cont.append(crear("p", { clase: "vacio", texto: "Aún no hay decisiones: el primer cierre llega tras el día 0." }));
+  if (!hoy.length) cont.append(crear("p", { clase: "vacio", texto: "Aún no hay decisiones: la primera llega con el primer cierre tras el día 0." }));
   for (const d of hoy) {
     const r = d.regimen;
+    const objetivo = d.exposicion_objetivo === null ? "sin decisión" : `${pct(d.exposicion_objetivo, 0)} invertido`;
     cont.append(crear("article", { clase: "decision" }, [
-      crear("h3", { texto: `${d.par} · cierre del ${fechaLarga(d.fecha)}` }),
+      crear("h3", {}, [`${d.par.split("/")[0]} hoy`, crear("span", { texto: objetivo })]),
       crear("div", { clase: "chips" }, [`tendencia ${r.tendencia}`, `volatilidad ${r.volatilidad}`, `fuerza ${ETIQUETA[r.fuerza] || r.fuerza}`]
         .map((txt) => crear("span", { clase: "chip", texto: txt }))),
-      crear("p", { texto: d.motivo }),
-      crear("p", { clase: "objetivo", texto: d.exposicion_objetivo === null ? "Hoy no se decide (dato sospechoso): se mantiene la posición."
-        : `Exposición objetivo: ${pct(d.exposicion_objetivo, 0)} del capital de este activo.` }),
+      crear("p", { texto: d.exposicion_objetivo === null ? "Dato sospechoso: hoy no se decide y se mantiene la posición." : d.motivo, title: d.motivo }),
     ]));
   }
-  const t = el("tabla-decisiones");
   const filas = c.decisiones.filter((d) => d.cartera === "V8").slice().reverse().map((d) => crear("tr", {}, [
     crear("td", { texto: fechaLarga(d.fecha) }), crear("td", { clase: "texto", texto: d.par }),
-    crear("td", { clase: "texto", texto: `${d.regimen.tendencia} / ${d.regimen.volatilidad} / ${ETIQUETA[d.regimen.fuerza] || d.regimen.fuerza}` }),
-    crear("td", { texto: d.exposicion_objetivo === null ? "—" : pct(d.exposicion_objetivo, 0) }),
+    crear("td", { clase: "texto", texto: `${d.regimen.tendencia}, ${d.regimen.volatilidad}, ${ETIQUETA[d.regimen.fuerza] || d.regimen.fuerza}` }),
+    crear("td", { texto: d.exposicion_objetivo === null ? "sin decisión" : pct(d.exposicion_objetivo, 0) }),
     crear("td", { clase: "motivo", texto: d.motivo }),
   ]));
-  t.replaceChildren(crear("caption", { texto: "Régimen (tendencia / volatilidad / fuerza) y motivo de cada decisión de la V8" }),
-    crear("thead", {}, [crear("tr", {}, ["Cierre", "Par", "Régimen", "Objetivo", "Motivo"].map((x, i) => crear("th", { texto: x, clase: i && i < 3 || i === 4 ? "texto" : "" })))]),
+  const t = el("tabla-decisiones");
+  if (!filas.length) { t.replaceChildren(crear("caption", { texto: "Todavía no hay decisiones." })); return; }
+  t.replaceChildren(crear("caption", { texto: "Régimen (tendencia, volatilidad, fuerza) y motivo de cada decisión de la V8" }),
+    crear("thead", {}, [crear("tr", {}, [["Cierre", ""], ["Par", "texto"], ["Régimen", "texto"], ["Objetivo", ""], ["Motivo", "texto"]]
+      .map(([x, cl]) => crear("th", { texto: x, clase: cl })))]),
     crear("tbody", {}, filas));
 }
 
 function operaciones(c) {
   const t = el("tabla-operaciones");
-  if (!c.ejecuciones.length) {
-    t.replaceChildren(crear("caption", { texto: "Todavía no hay operaciones." }));
-    return;
-  }
+  if (!c.ejecuciones.length) { t.replaceChildren(crear("caption", { texto: "Todavía no hay operaciones." })); return; }
   const filas = c.ejecuciones.slice().reverse().map((o) => crear("tr", {}, [
     crear("td", { texto: fechaLarga(o.fecha) }), crear("td", { clase: "texto", texto: o.cartera === "V8" ? "V8" : "30 % fijo" }),
     crear("td", { clase: "texto", texto: o.par }), crear("td", { clase: "texto", texto: `${o.lado} (${o.motivo})` }),
     crear("td", { texto: num(o.unidades) }), crear("td", { texto: eur(o.precio_referencia, 2) }), crear("td", { texto: eur(o.precio_efectivo, 2) }),
     crear("td", { texto: eur(o.comision, 2) }), crear("td", { texto: eur(o.slippage, 2) }), crear("td", { texto: eur(o.funding, 2) }),
-    crear("td", { texto: `${pct(o.exposicion_antes, 0)} → ${pct(o.exposicion_objetivo, 0)}` }),
+    crear("td", { texto: `${pct(o.exposicion_antes, 0)} a ${pct(o.exposicion_objetivo, 0)}` }),
   ]));
-  const cab = ["Apertura", "Cartera", "Par", "Orden", "Unidades", "Precio ref.", "Precio efectivo", "Comisión", "Slippage", "Funding", "Exposición"];
+  const cab = [["Apertura", ""], ["Cartera", "texto"], ["Par", "texto"], ["Orden", "texto"], ["Unidades", ""], ["Precio ref.", ""],
+    ["Precio efectivo", ""], ["Comisión", ""], ["Slippage", ""], ["Funding", ""], ["Exposición", ""]];
   t.replaceChildren(crear("caption", { texto: `${c.ejecuciones.length} órdenes simuladas, de la más reciente a la más antigua` }),
-    crear("thead", {}, [crear("tr", {}, cab.map((x, i) => crear("th", { texto: x, clase: i >= 1 && i <= 3 ? "texto" : "" })))]),
+    crear("thead", {}, [crear("tr", {}, cab.map(([x, cl]) => crear("th", { texto: x, clase: cl })))]),
     crear("tbody", {}, filas));
 }
 
@@ -427,8 +463,9 @@ async function iniciar() {
     if (!r.ok) throw new Error(`registro: ${r.status}`);
     texto = await r.text();
     config = rc.ok ? await rc.json() : null;
-  } catch (err) {
+  } catch {
     el("avisos").append(crear("div", { clase: "aviso", texto: "Todavía no hay registro publicado (el experimento no ha empezado) o no se pudo cargar." }));
+    el("sello-estado").textContent = "Sin registro todavía";
     preregistro();
     return;
   }
@@ -437,15 +474,23 @@ async function iniciar() {
   const costes = config ? { comision: config.configuracion.comision_pct, slippage: config.configuracion.slippage_pct } : { comision: 0.008, slippage: 0.001 };
   const c = calcular(eventos, costes);
   if (!c) return;
-  avisos(c); tarjetas(c); dibujar(c); tablaCapital(c); decisiones(c); operaciones(c);
-  let ultimo = eventos.at(-1).hash;
+  avisos(c); portada(c); dibujar(c); tablaCapital(c); decisiones(c); operaciones(c);
+  let ultimo = "";
   window.addEventListener("resize", () => { clearTimeout(window.__redibujo); window.__redibujo = setTimeout(() => dibujar(c), 150); });
 
   const resultado = el("resultado-verificacion");
+  const sello = el("sello");
   const verificar = async () => {
     resultado.textContent = "Verificando…";
+    sello.className = "sello cargando";
     const v = await verificarCadena(texto);
     ultimo = v.valido ? v.ultimo : "";
+    sello.className = `sello ${v.valido ? "ok" : "mal"}`;
+    el("sello-estado").textContent = v.valido ? "Registro íntegro" : "Registro alterado";
+    el("sello-detalle").textContent = v.valido
+      ? `${v.lineas} eventos encadenados con SHA-256, verificados ahora en tu navegador.`
+      : `La cadena se rompe en la línea ${v.linea}: ${v.error}. No te fíes de estas cifras.`;
+    el("sello-hash").textContent = v.ultimo;
     resultado.replaceChildren(
       v.valido ? crear("div", { clase: "ok", texto: `Cadena íntegra: ${v.lineas} eventos verificados, ninguno alterado.` })
         : crear("div", { clase: "mal", texto: `Cadena ROTA en la línea ${v.linea}: ${v.error}. Los datos de esta página no son fiables.` }),
@@ -457,17 +502,17 @@ async function iniciar() {
     }
     comparar();
   };
-  el("boton-verificar").onclick = verificar;
   const comparar = () => {
     const valor = el("hash-x").value.trim().toLowerCase().replace(/[^0-9a-f]/g, "");
     const salida = el("resultado-comparar");
     if (!valor) { salida.textContent = ""; return; }
     salida.replaceChildren(ultimo && ultimo.startsWith(valor) && valor.length >= 8
-      ? crear("span", { clase: "ok", texto: "Coincide con el hash de hoy." })
-      : crear("span", { clase: "mal", texto: valor.length < 8 ? "Escribe al menos 8 caracteres." : "No coincide con el hash de hoy (puede ser de otro día)." }));
+      ? crear("span", { clase: "sube", texto: "Coincide con el hash de hoy." })
+      : crear("span", { clase: "baja", texto: valor.length < 8 ? "Escribe al menos 8 caracteres." : "No coincide con el hash de hoy (puede ser de otro día)." }));
   };
+  el("boton-verificar").onclick = verificar;
   el("hash-x").oninput = comparar;
-  verificar();   // también al cargar: si la cadena está rota, se avisa arriba sin esperar al botón
+  verificar();   // también al cargar: el sello de la portada muestra el resultado
   preregistro();
 }
 

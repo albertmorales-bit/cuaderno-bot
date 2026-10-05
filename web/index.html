@@ -2,100 +2,118 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cuaderno bot · 90 días</title>
-  <meta name="description" content="Paper trading público durante 90 días con 10.000 € ficticios: registro encadenado y verificable en el navegador.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>El Cuaderno de Albert · 90 días de paper trading</title>
+  <meta name="description" content="Paper trading público durante 90 días con 10.000 € ficticios en BTC y ETH. Cada cifra se recalcula y se verifica en tu navegador a partir de un registro encadenado con SHA-256.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0b0c0d" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@cuadernoalbert">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIyIiBmaWxsPSIjMGEwYjBkIi8+PHJlY3QgeD0iMzAiIHk9IjE4IiB3aWR0aD0iMTQiIGhlaWdodD0iNjQiIHJ4PSIxLjUiIGZpbGw9IiNkOGIyNWMiLz48cG9seWdvbiBwb2ludHM9IjM5LjgsNDEuNCA3Ny44LDEyLjQgODYuMywyMy42IDQ4LjMsNTIuNiIgZmlsbD0iI2Q4YjI1YyIvPjxwb2x5Z29uIHBvaW50cz0iNDguMyw0Ny40IDg2LjMsNzYuNCA3Ny44LDg3LjYgMzkuOCw1OC42IiBmaWxsPSIjZDhiMjVjIi8+PC9zdmc+">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="saltar" href="#contenido">Saltar al contenido</a>
-  <div class="aviso-fijo" role="note">
-    <strong>Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.</strong>
-    Nadie envía órdenes reales: el bot simula con datos públicos de Kraken.
-  </div>
-  <div id="demo" class="banda-demo" hidden>DEMOSTRACIÓN con datos sintéticos: no es el experimento real.</div>
 
-  <header class="cabecera">
-    <div class="envoltura">
-      <p class="antetitulo">El Cuaderno de Albert · paper trading en público</p>
-      <h1><span id="dia">Día —</span> <span class="de90">de 90</span></h1>
-      <p class="subtitulo">10.000 € ficticios en BTC/EUR y ETH/EUR. La estrategia (V8) salió
-        <strong class="etiqueta-noapto">NO APTO</strong> en su validación fuera de muestra y se ejecuta igualmente,
-        junto a una cartera con un 30 % fijo, para poner a prueba el proceso.
-        <a href="#preregistro">Qué se fijó antes de empezar</a>.</p>
+  <header class="barra">
+    <div class="envoltura barra__interior">
+      <a class="marca" href="#arriba" aria-label="El Cuaderno de Albert, inicio">
+        <svg class="marca__simbolo" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <rect x="30" y="18" width="14" height="64" rx="1.5"/>
+          <polygon points="39.8,41.4 77.8,12.4 86.3,23.6 48.3,52.6"/>
+          <polygon points="48.3,47.4 86.3,76.4 77.8,87.6 39.8,58.6"/>
+        </svg>
+        <span class="marca__texto">El Cuaderno de Albert</span>
+        <span class="marca__sub">Bot-Predict en paper trading</span>
+      </a>
+      <nav class="nav" aria-label="Secciones">
+        <a href="#operaciones">Operaciones</a>
+        <a href="#verificar">Verificar</a>
+        <a href="#preregistro">Pre-registro</a>
+        <a href="https://github.com/albertmorales-bit/cuaderno-bot" rel="noopener">Código</a>
+      </nav>
     </div>
   </header>
 
-  <main id="contenido" class="envoltura">
-    <div id="avisos" class="avisos" aria-live="polite"></div>
+  <p class="aviso-fijo" role="note"><strong>Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.</strong> Nadie envía órdenes reales: el bot simula con datos públicos de Kraken.</p>
+  <div id="demo" class="banda-demo" hidden>Demostración con datos sintéticos: no es el experimento real.</div>
 
-    <section aria-labelledby="t-resumen">
-      <h2 id="t-resumen" class="visualmente-oculto">Resumen</h2>
-      <div class="tarjetas" id="tarjetas"></div>
-      <p class="pie-dato" id="actualizado"></p>
+  <main id="contenido">
+    <section class="portada envoltura" id="arriba" aria-labelledby="titulo-dia">
+      <div class="portada__resumen">
+        <h1 id="titulo-dia" class="dia"><span class="dia__n" id="dia">Día 0</span> <span class="dia__total">de 90</span></h1>
+        <p class="dia__contexto">10.000 € ficticios en BTC y ETH. La estrategia salió <strong class="noapto">NO APTO</strong> en su validación y corre igual, en público.</p>
+        <div class="pista" id="pista" role="img" aria-label="Progreso del experimento"></div>
+
+        <div class="protagonista">
+          <p class="protagonista__nombre">V8, la estrategia</p>
+          <p class="protagonista__valor" id="v8-valor">10.000 €</p>
+          <dl class="protagonista__datos" id="v8-datos"></dl>
+        </div>
+
+        <div class="rivales" id="rivales"></div>
+      </div>
+
+      <figure class="portada__grafico">
+        <div class="leyenda" id="leyenda"></div>
+        <div class="grafico" id="grafico-capital" tabindex="0" role="img" aria-label="Valor de cada cartera por día"></div>
+        <p class="titulo-caida" aria-hidden="true">Caída desde el máximo</p>
+        <div class="grafico grafico--caida" id="grafico-caida" role="img" aria-label="Caída desde el máximo por día"></div>
+        <figcaption class="pie-dato" id="actualizado"></figcaption>
+      </figure>
     </section>
 
-    <section class="bloque" aria-labelledby="t-capital">
-      <div class="bloque-cabecera">
-        <h2 id="t-capital">Capital de cada cartera</h2>
-        <p class="nota">Curva completa desde el día 0, con cada día valorado tras ejecutar sus órdenes en la apertura. Pasa el dedo o el ratón por el gráfico, o usa las flechas del teclado.</p>
+    <section class="franja envoltura" aria-label="Qué ve el bot y verificación del registro">
+      <div class="decisiones" id="decision-hoy"></div>
+      <div class="sello" id="sello" aria-live="polite">
+        <p class="sello__estado" id="sello-estado">Verificando el registro…</p>
+        <p class="sello__detalle" id="sello-detalle"></p>
+        <p class="sello__hash"><span>Hash del día</span><code id="sello-hash">calculando</code></p>
       </div>
-      <div class="leyenda" id="leyenda"></div>
-      <div class="grafico" id="grafico-capital" tabindex="0" role="img" aria-label="Capital de cada cartera por día"></div>
-      <h3 class="titulo-grafico">Caída desde el máximo</h3>
-      <div class="grafico grafico-bajo" id="grafico-caida" role="img" aria-label="Caída desde el máximo por día"></div>
-      <details class="tabla-detalle">
-        <summary>Ver los datos en tabla</summary>
+    </section>
+
+    <div id="avisos" class="avisos envoltura" aria-live="polite"></div>
+
+    <section class="bloque envoltura" id="operaciones" aria-labelledby="t-operaciones">
+      <h2 id="t-operaciones">Todas las operaciones</h2>
+      <p class="nota">Ganadoras y perdedoras, con el precio de referencia (la apertura), el precio efectivo, la comisión (0,80 %), el slippage (0,10 %) y el funding.</p>
+      <div class="tabla-envoltura"><table id="tabla-operaciones"></table></div>
+    </section>
+
+    <section class="bloque envoltura" aria-labelledby="t-decisiones">
+      <h2 id="t-decisiones">Cada decisión, con su motivo</h2>
+      <p class="nota">Régimen detectado y motivo tal como se escribieron en el registro antes de ejecutar la orden.</p>
+      <div class="tabla-envoltura"><table id="tabla-decisiones"></table></div>
+      <details class="detalle">
+        <summary>Ver el valor diario de las carteras en tabla</summary>
         <div class="tabla-envoltura"><table id="tabla-capital"></table></div>
       </details>
     </section>
 
-    <section class="bloque" aria-labelledby="t-decision">
-      <div class="bloque-cabecera">
-        <h2 id="t-decision">Qué ve y qué hace la V8</h2>
-        <p class="nota">Régimen detectado y motivo de cada decisión, tal como se escribieron en el registro ANTES de ejecutar.</p>
-      </div>
-      <div id="decision-hoy" class="decisiones"></div>
-      <details class="tabla-detalle">
-        <summary>Todas las decisiones</summary>
-        <div class="tabla-envoltura"><table id="tabla-decisiones"></table></div>
-      </details>
-    </section>
-
-    <section class="bloque" aria-labelledby="t-operaciones">
-      <div class="bloque-cabecera">
-        <h2 id="t-operaciones">Todas las operaciones</h2>
-        <p class="nota">Ganadoras y perdedoras, con precio de referencia (apertura), precio efectivo, comisión (0,80 %), slippage (0,10 %) y funding.</p>
-      </div>
-      <div class="tabla-envoltura"><table id="tabla-operaciones"></table></div>
-    </section>
-
-    <section class="bloque verificar" aria-labelledby="t-verificar">
-      <div class="bloque-cabecera">
-        <h2 id="t-verificar">Verificar que nadie ha tocado nada</h2>
-        <p class="nota">Tu navegador vuelve a calcular el SHA-256 de cada línea del registro y comprueba que cada una encadena con la anterior. Si alguien hubiera cambiado, borrado o reordenado una sola línea, la cadena se rompería.</p>
-      </div>
+    <section class="bloque bloque--verificar envoltura" id="verificar" aria-labelledby="t-verificar">
+      <h2 id="t-verificar">Verifícalo tú</h2>
+      <p class="nota">Tu navegador vuelve a calcular el SHA-256 de cada línea del registro y comprueba que cada una encadena con la anterior. Cambiar, borrar o reordenar una sola línea rompe la cadena.</p>
       <button type="button" id="boton-verificar" class="boton">Verificar el registro</button>
       <div id="resultado-verificacion" class="resultado" aria-live="polite"></div>
       <div class="comparar">
-        <label for="hash-x">Pega aquí el hash publicado en X para compararlo con el de hoy:</label>
-        <div class="fila-comparar">
-          <input id="hash-x" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="p. ej. 3f9a1c07">
+        <label for="hash-x">Pega el hash publicado en X para compararlo con el de hoy</label>
+        <div class="comparar__fila">
+          <input id="hash-x" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="por ejemplo 1fcbb06e">
           <span id="resultado-comparar" aria-live="polite"></span>
         </div>
       </div>
-      <p class="nota">Descargas: <a href="registro.jsonl" download>registro.jsonl</a> ·
-        <a href="configuracion_congelada.json">configuración congelada</a> · el código de esta página es público en el repositorio
-        (<code>web/</code>) y no usa librerías externas.</p>
+      <p class="nota">Descargas: <a href="registro.jsonl" download>registro.jsonl</a> y <a href="configuracion_congelada.json">la configuración congelada</a>. El código de esta página es público (<code>web/</code>) y no usa librerías.</p>
     </section>
 
-    <section class="bloque" id="preregistro" aria-labelledby="t-prereg">
-      <div class="bloque-cabecera">
-        <h2 id="t-prereg">Pre-registro</h2>
-        <p class="nota">Versión congelada, criterios y reglas fijados el día 0. Su hash se publicó en X antes de la primera operación.</p>
-      </div>
+    <section class="bloque envoltura" id="preregistro" aria-labelledby="t-prereg">
+      <h2 id="t-prereg">Pre-registro</h2>
+      <p class="nota">Versión congelada, criterios y reglas fijados el día 0. Su hash se publicó en X antes de la primera operación.</p>
       <div id="prereg-estado" class="resultado"></div>
-      <details class="tabla-detalle">
+      <details class="detalle">
         <summary>Leer el pre-registro completo</summary>
         <pre id="prereg-texto" class="prereg"></pre>
       </details>
@@ -104,7 +122,8 @@
 
   <footer class="pie envoltura">
     <p><strong>Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.</strong>
-      90 días con tan pocas operaciones no demuestran rentabilidad: demuestran el proceso.</p>
+      Con tan pocas operaciones, 90 días demuestran el proceso, no la rentabilidad.</p>
+    <p><a href="https://github.com/albertmorales-bit/cuaderno-bot/blob/main/CAMBIOS.md" rel="noopener">Cambios después del pre-registro</a></p>
   </footer>
 
   <div id="tooltip" class="tooltip" role="status" hidden></div>

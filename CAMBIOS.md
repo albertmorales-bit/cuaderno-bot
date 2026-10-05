@@ -47,6 +47,29 @@ registro histórico. El tuit del día 1 se publicó con las cifras corregidas.
 JavaScript publicado, ejecutado con Node) dan exactamente V8 = 9.910,72 €,
 30 % fijo = 9.972,98 €, comprar y mantener = 9.910,72 €. Hay tests de paridad.
 
+## Cambio 2 · 2026-10-05 · rediseño visual de la web
+
+**Qué cambia.** Solo la presentación de la web: identidad visual del Auditor
+Anti-Overfitting (oscuro por defecto, Geist, acento dorado), una portada pensada
+para leerse de un vistazo en una captura de escritorio (día N de 90 con pista de
+90 casillas, valor de la V8 con resultado del día y caída, sus dos rivales,
+curva completa, qué ve el bot hoy y sello de verificación calculado al cargar),
+y el resto de secciones reordenadas. Pedido por el usuario.
+
+**Lo que no cambia, comprobado:** las funciones `calcular()` y
+`verificarCadena()` de `web/app.js` son idénticas carácter a carácter a las de
+la fe de erratas 1, así que las cifras y la verificación son las mismas (test de
+paridad con Python en verde). Estrategia, configuración, motor y registro, sin
+cambios.
+
+| Archivo | SHA-256 anterior (fe de erratas 1) | SHA-256 nuevo |
+|---|---|---|
+| `web/index.html` | `d100f08bd2705d13cf464d8b76de5cc90160c44e4a35e9855f2b1233beb40f65` | `4393b4067c58995f46c04b3df48aa99797c5f5d6677891db3633799bfcf2b9b0` |
+| `web/styles.css` | `60023f2a74e42696438c93895f6a3e92af5b58581d421be07aab2aeff60becba` | `746b3ad3b96566f354ccbd91d3680105a90271cb6904815ae5957509ca5ddbc6` |
+| `web/app.js` | `d89253a52979cc1fe3796e44fb18405ed13b3b49553fd95eb853f90def0de2f7` | `c72d3f37ed4fd2ee244c8f16a2ffd674abf422c3bf5b0e8f0976c0f159edc73e` |
+
+La web carga la tipografía Geist desde Google Fonts, como la landing del Auditor.
+
 ## Observaciones operativas (sin cambios en ningún archivo)
 
 - **2026-10-05:** GitHub no lanzó las ejecuciones programadas de las 00:17 ni de
