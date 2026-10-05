@@ -70,6 +70,24 @@ cambios.
 
 La web carga la tipografía Geist desde Google Fonts, como la landing del Auditor.
 
+## Cambio 3 · 2026-10-05 · hash del día visible en la portada
+
+**Qué cambia.** En pantallas de portátil (unos 720 px de alto) el recuadro de
+verificación con el hash del día quedaba por debajo del borde y no salía en las
+capturas. Se añade, justo debajo del "Día N de 90", un sello compacto con el
+estado de la verificación y el hash abreviado (el completo, al pasar el ratón y
+en el recuadro de abajo). Lo rellena el mismo resultado de `verificarCadena()`.
+
+**Lo que no cambia:** `calcular()` y `verificarCadena()` siguen idénticas; test de
+paridad con Python en verde. Estrategia, configuración, motor y registro, sin
+cambios.
+
+| Archivo | SHA-256 anterior (cambio 2) | SHA-256 nuevo |
+|---|---|---|
+| `web/index.html` | `4393b4067c58995f46c04b3df48aa99797c5f5d6677891db3633799bfcf2b9b0` | `7dd63523abb5592cf24264fa62ada5b974842b50caec152acde12eed57c4f2d6` |
+| `web/styles.css` | `746b3ad3b96566f354ccbd91d3680105a90271cb6904815ae5957509ca5ddbc6` | `a7122434c9d7a2ea9018fd14dcba096dbc71ed62089ab403c3ad4950efc9b2a2` |
+| `web/app.js` | `c72d3f37ed4fd2ee244c8f16a2ffd674abf422c3bf5b0e8f0976c0f159edc73e` | `80fb6be6e30cab4e114198c69ef6bc9db52ed5ff635d600682360209d5ee7049` |
+
 ## Observaciones operativas (sin cambios en ningún archivo)
 
 - **2026-10-05:** GitHub no lanzó las ejecuciones programadas de las 00:17 ni de

@@ -466,6 +466,7 @@ async function iniciar() {
   } catch {
     el("avisos").append(crear("div", { clase: "aviso", texto: "Todavía no hay registro publicado (el experimento no ha empezado) o no se pudo cargar." }));
     el("sello-estado").textContent = "Sin registro todavía";
+    el("sello-mini-estado").textContent = "Sin registro todavía";
     preregistro();
     return;
   }
@@ -491,6 +492,10 @@ async function iniciar() {
       ? `${v.lineas} eventos encadenados con SHA-256, verificados ahora en tu navegador.`
       : `La cadena se rompe en la línea ${v.linea}: ${v.error}. No te fíes de estas cifras.`;
     el("sello-hash").textContent = v.ultimo;
+    el("sello-mini").className = `sello-mini ${v.valido ? "ok" : "mal"}`;
+    el("sello-mini-estado").textContent = v.valido ? "Registro íntegro · hash del día" : "Registro alterado";
+    el("sello-mini-hash").textContent = v.ultimo ? `${v.ultimo.slice(0, 16)}…${v.ultimo.slice(-6)}` : "";
+    el("sello-mini-hash").title = v.ultimo;
     resultado.replaceChildren(
       v.valido ? crear("div", { clase: "ok", texto: `Cadena íntegra: ${v.lineas} eventos verificados, ninguno alterado.` })
         : crear("div", { clase: "mal", texto: `Cadena ROTA en la línea ${v.linea}: ${v.error}. Los datos de esta página no son fiables.` }),
