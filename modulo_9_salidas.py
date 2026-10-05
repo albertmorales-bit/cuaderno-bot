@@ -106,7 +106,8 @@ class EstadoCarteraDia:
 
 @dataclass
 class EstadoDia:
-    fecha: str
+    fecha: str                    # cierre en el que se decidió
+    fecha_apertura: str           # apertura en la que se ejecutó (momento de la valoración)
     dia: int
     carteras: dict
     regimen: dict
@@ -116,7 +117,7 @@ class EstadoDia:
     parada: bool
     hash_dia: str
     lineas_registro: int
-    series: pd.DataFrame          # capital al cierre por cartera (incluye BH100)
+    series: pd.DataFrame          # valor tras la apertura de cada día, por cartera (incluye BH100)
 
     def a_dict(self) -> dict:
         d = {k: v for k, v in self.__dict__.items() if k != "series"}
@@ -132,40 +133,55 @@ def _caidas(serie: pd.Series) -> tuple[float, float]:
 
 
 def construir_estado(eventos: list[dict], hash_dia: str, comision: float, slippage: float) -> Optional[EstadoDia]:
-    """Estado tras la última decisión. None si aún no hay ninguna (día 0)."""
+    """Estado del día tras la última decisión ya EJECUTADA. None si aún no hay ninguna (día 0).
+
+    Fe de erratas 1 (2026-10-05, ver CAMBIOS.md): cada día se valora la cartera
+    JUSTO DESPUÉS de ejecutar las órdenes de la decisión, al precio de apertura
+    al que se ejecutaron. Así el capital, las comisiones, las posiciones y la
+    exposición describen el mismo instante. (La versión anterior valoraba al
+    cierre previo a la orden, pero sumaba ya las comisiones de esa orden.)
+    """
     por_tipo: dict[str, list[dict]] = {}
     for e in eventos:
         por_tipo.setdefault(e["tipo"], []).append(e["datos"])
     decisiones = [d for d in por_tipo.get("decision", []) if d["cartera"] == "V8"]
     if not decisiones:
         return None
-    fechas_decision = sorted({d["fecha"] for d in decisiones})
-    fecha = fechas_decision[-1]
     inicio = por_tipo["inicio"][0]
-    fecha_base = max(v["ultima_vela"] for v in inicio["archivo_inicial"].values())
-
-    val = pd.DataFrame(por_tipo.get("valoracion", []))
-    tabla = val.pivot_table(index="fecha", columns=["cartera", "par"], values="equity")
-    series = pd.DataFrame({c: tabla[c].sum(axis=1, min_count=tabla[c].shape[1]) for c in ("V8", "FIJO30")}).dropna()
-    series.loc[fecha_base] = CAPITAL
-    series = series.sort_index()
-
-    # Comprar y mantener al 100 %: compra en la primera apertura (la de la primera ejecución) con los mismos costes.
-    cierres = val[val["cartera"] == "V8"].pivot_table(index="fecha", columns="par", values="cierre")
-    aperturas = {}
-    for e in por_tipo.get("ejecucion", []) + por_tipo.get("sin_orden", []):
-        if e["fecha_decision"] == fechas_decision[0]:
-            aperturas[e["par"]] = e.get("apertura", e.get("precio_referencia"))
-    bh = pd.Series(CAPITAL, index=series.index)
-    if len(aperturas) == cierres.shape[1]:
-        unidades = {p: CAPITAL / len(aperturas) / (a * (1 + slippage) * (1 + comision)) for p, a in aperturas.items()}
-        invertido = cierres.index > fechas_decision[0]
-        valor = sum(cierres[p] * u for p, u in unidades.items())
-        bh.loc[cierres.index[invertido]] = valor[invertido].to_numpy()
-    series["BH100"] = bh
-
+    pares = list(inicio["archivo_inicial"])
     ejecuciones = por_tipo.get("ejecucion", [])
+
+    # Precio de apertura en el que se ejecutó cada decisión (está en `ejecucion` y en `sin_orden`).
+    aperturas: dict[str, dict[str, float]] = {}
+    for e in ejecuciones + por_tipo.get("sin_orden", []):
+        aperturas.setdefault(e["fecha_decision"], {})[e["par"]] = e.get("apertura", e.get("precio_referencia"))
+    fechas_decision = sorted({d["fecha"] for d in decisiones})
+    completas = [f for f in fechas_decision if all(p in aperturas.get(f, {}) for p in pares)]
+    if not completas:
+        return None
+    fecha = completas[-1]
+
+    def mas_un_dia(iso: str) -> str:
+        return (pd.Timestamp(iso) + pd.Timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Posiciones tras cada decisión ejecutada, valoradas a su precio de apertura.
+    fecha_base = mas_un_dia(max(v["ultima_vela"] for v in inicio["archivo_inicial"].values()))
+    tenencias = {(c, p): (CAPITAL / len(pares), 0.0) for c in ("V8", "FIJO30") for p in pares}
+    filas = {fecha_base: {"V8": CAPITAL, "FIJO30": CAPITAL, "BH100": CAPITAL}}
+    primera = aperturas[completas[0]]
+    unidades_bh = {p: CAPITAL / len(pares) / (primera[p] * (1 + slippage) * (1 + comision)) for p in pares}
+    for f in completas:
+        for e in ejecuciones:
+            if e["fecha_decision"] == f:
+                tenencias[(e["cartera"], e["par"])] = (e["efectivo_despues"], e["unidades_despues"])
+        apertura = aperturas[f]
+        fila = {c: sum(tenencias[(c, p)][0] + tenencias[(c, p)][1] * apertura[p] for p in pares) for c in ("V8", "FIJO30")}
+        fila["BH100"] = sum(unidades_bh[p] * apertura[p] for p in pares)
+        filas[mas_un_dia(f)] = fila
+    series = pd.DataFrame.from_dict(filas, orient="index").sort_index()
+
     carteras = {}
+    ultima_apertura = aperturas[fecha]
     for c in ("V8", "FIJO30", "BH100"):
         s = series[c]
         actual, maxima = _caidas(s)
@@ -173,28 +189,26 @@ def construir_estado(eventos: list[dict], hash_dia: str, comision: float, slippa
         estado = EstadoCarteraDia(
             equity=float(s.iloc[-1]), resultado_dia=float(s.iloc[-1] - previo),
             resultado_dia_pct=float(s.iloc[-1] / previo - 1), acumulado_pct=float(s.iloc[-1] / CAPITAL - 1),
-            caida_actual=actual, caida_maxima=maxima, exposicion=0.0,
+            caida_actual=actual, caida_maxima=maxima, exposicion=1.0 if c == "BH100" else 0.0,
         )
         if c != "BH100":
-            ultimas = val[(val["cartera"] == c) & (val["fecha"] == fecha)]
-            invertido = sum(r["unidades"] * r["cierre"] for _, r in ultimas.iterrows())
+            invertido = sum(tenencias[(c, p)][1] * ultima_apertura[p] for p in pares)
             estado.exposicion = invertido / estado.equity if estado.equity > 0 else 0.0
-            estado.posiciones = {r["par"]: {"unidades": r["unidades"], "valor": r["unidades"] * r["cierre"]}
-                                 for _, r in ultimas.iterrows() if r["unidades"] > 0}
-            propias = [e for e in ejecuciones if e["cartera"] == c]
+            estado.posiciones = {p: {"unidades": tenencias[(c, p)][1], "valor": tenencias[(c, p)][1] * ultima_apertura[p]}
+                                 for p in pares if tenencias[(c, p)][1] > 0}
+            propias = [e for e in ejecuciones if e["cartera"] == c and e["fecha_decision"] <= fecha]
             estado.ordenes_hoy = [e for e in propias if e["fecha_decision"] == fecha]
             estado.ordenes_total = len(propias)
             estado.salidas_total = sum(1 for e in propias if e["motivo"] == "salida")
             estado.comisiones = float(sum(e["comision"] for e in propias))
             estado.slippage = float(sum(e["slippage"] for e in propias))
-        else:
-            estado.exposicion = 1.0 if aperturas and fecha > fechas_decision[0] else 0.0
         carteras[c] = estado
 
     hoy = [d for d in decisiones if d["fecha"] == fecha]
+    dia = fechas_decision.index(fecha) + 1
     avisos = [a for a in por_tipo.get("alerta", []) if a.get("fecha", "") >= fechas_decision[-min(7, len(fechas_decision))]]
     return EstadoDia(
-        fecha=fecha, dia=len(fechas_decision), carteras=carteras,
+        fecha=fecha, fecha_apertura=mas_un_dia(fecha), dia=dia, carteras=carteras,
         regimen={d["par"]: d["regimen"] for d in hoy}, motivo={d["par"]: d["motivo"] for d in hoy},
         velas_perdidas=len(por_tipo.get("vela_perdida", [])), avisos=avisos,
         parada=bool(por_tipo.get("parada")), hash_dia=hash_dia, lineas_registro=len(eventos), series=series,
@@ -305,8 +319,10 @@ def hilo_semanal(e: EstadoDia, eventos: list[dict]) -> Optional[list[str]]:
 
 
 def resumen_markdown(e: EstadoDia, tuit: str, comentario: str, hilo: Optional[list[str]]) -> str:
-    filas = [f"# Día {e.dia} de 90 · cierre del {e.fecha[:10]}", "", f"> {NOTA}", "",
-             "| Cartera | Capital | Hoy | Acumulado | Caída actual | Caída máxima | Exposición | Comisiones |",
+    filas = [f"# Día {e.dia} de 90 · decisión al cierre del {e.fecha[:10]}, órdenes en la apertura del "
+             f"{e.fecha_apertura[:10]}", "", f"> {NOTA}", "",
+             "Valores tras ejecutar las órdenes del día, al precio de apertura (comisiones y slippage incluidos).", "",
+             "| Cartera | Valor | Hoy | Acumulado | Caída actual | Caída máxima | Invertido | Comisiones |",
              "|---|---:|---:|---:|---:|---:|---:|---:|"]
     for c, s in e.carteras.items():
         comis = "—" if c == "BH100" else eur(s.comisiones, 2)
@@ -350,7 +366,7 @@ def imagen_diaria(e: EstadoDia, ruta: Path) -> Path:
     s = e.series.copy()
     s.index = pd.to_datetime(s.index, utc=True)
     fig = plt.figure(figsize=(8, 4.5), dpi=200, facecolor=TINTA["superficie"])
-    rejilla = fig.add_gridspec(2, 1, height_ratios=[2.3, 1], hspace=0.12, left=0.1, right=0.78, top=0.76, bottom=0.12)
+    rejilla = fig.add_gridspec(2, 1, height_ratios=[2.3, 1], hspace=0.12, left=0.1, right=0.71, top=0.76, bottom=0.12)
     ax, axd = fig.add_subplot(rejilla[0]), fig.add_subplot(rejilla[1])
     marcadores = len(s) < 4
     caida_min = -1.0
@@ -403,7 +419,8 @@ def imagen_diaria(e: EstadoDia, ruta: Path) -> Path:
     v8 = e.carteras["V8"]
     fig.text(0.1, 0.94, f"Día {e.dia} de 90 · V8: {eur(v8.equity)} ({pct(v8.acumulado_pct, 1, True)})",
              fontsize=14, color=TINTA["primaria"], weight="bold", va="top")
-    fig.text(0.1, 0.875, f"Cierre del {e.fecha[8:10]}/{e.fecha[5:7]}/{e.fecha[:4]} · curva completa desde el día 0 · "
+    fa = e.fecha_apertura
+    fig.text(0.1, 0.875, f"Valor tras la apertura del {fa[8:10]}/{fa[5:7]}/{fa[:4]} · curva completa desde el día 0 · "
              f"caída actual {pct(v8.caida_actual)}, máxima {pct(v8.caida_maxima)}", fontsize=9,
              color=TINTA["secundaria"], va="top")
     fig.text(0.1, 0.03, f"{NOTA} · hash {e.hash_dia[:16]}", fontsize=7, color=TINTA["tenue"])

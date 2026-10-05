@@ -283,3 +283,13 @@ minutos por despliegue; sin uso comercial). Trabajos `web` → `desplegar` con
 publica aunque falle la ejecución del bot, y el checkout de `web` pide `main`
 para recoger el commit que acaba de hacer el bot. El bot solo puede commitear en
 `vivo/`.
+
+## Experimento en marcha
+
+**D-040 · Fe de erratas 1 (2026-10-05).** La presentación diaria pasa a valorar
+cada cartera tras ejecutar las órdenes del día, a precio de apertura, para que
+capital y comisiones describan el mismo instante. Cambian `modulo_9_salidas.py`,
+`web/app.js` y `web/index.html`, que tienen huella en el pre-registro; detalle,
+hashes y comprobación en `CAMBIOS.md`. Decisión del usuario: corregirlo con fe
+de erratas pública, sin reiniciar el contador, porque la estrategia, la
+configuración y el registro no cambian.

@@ -56,10 +56,21 @@ def test_estado_cuadra_con_el_registro(experimento):
     motor, estados = experimento
     e = estados[-1]
     assert e.dia == 30
-    val = [x["datos"] for x in motor.registro.eventos() if x["tipo"] == "valoracion"
-           and x["datos"]["cartera"] == "V8" and x["datos"]["fecha"] == e.fecha]
-    assert e.carteras["V8"].equity == pytest.approx(sum(v["equity"] for v in val))
-    assert e.series.index[0] < e.fecha and e.series["V8"].iloc[0] == 10_000
+    # Fe de erratas 1: valor tras ejecutar las órdenes del día, a precio de apertura.
+    ev = motor.registro.eventos()
+    tenencias = {p: (5_000.0, 0.0) for p in ("BTC/EUR", "ETH/EUR")}
+    apertura = {}
+    for x in ev:
+        d = x["datos"]
+        if x["tipo"] in ("ejecucion", "sin_orden") and d["cartera"] == "V8" and d["fecha_decision"] <= e.fecha:
+            if x["tipo"] == "ejecucion":
+                tenencias[d["par"]] = (d["efectivo_despues"], d["unidades_despues"])
+            if d["fecha_decision"] == e.fecha:
+                apertura[d["par"]] = d.get("apertura", d.get("precio_referencia"))
+    esperado = sum(ef + un * apertura[p] for p, (ef, un) in tenencias.items())
+    assert e.carteras["V8"].equity == pytest.approx(esperado)
+    assert e.fecha_apertura > e.fecha and e.series.index[-1] == e.fecha_apertura
+    assert e.series["V8"].iloc[0] == 10_000
     assert 0 <= e.carteras["V8"].caida_actual <= e.carteras["V8"].caida_maxima
 
 

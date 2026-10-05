@@ -84,43 +84,47 @@ function leerEventos(texto) {
 }
 
 // --------------------------------------------------------------- cálculo
+// Fe de erratas 1 (2026-10-05, ver CAMBIOS.md): cada día se valora la cartera JUSTO DESPUÉS de
+// ejecutar las órdenes de la decisión, al precio de apertura al que se ejecutaron (igual que
+// construir_estado en modulo_9_salidas.py). Así capital, comisiones, posiciones y exposición
+// describen el mismo instante.
+function masUnDia(iso) {
+  const d = new Date(iso);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().replace(".000Z", "Z");
+}
+
 function calcular(eventos, costes) {
   const porTipo = {};
   for (const e of eventos) (porTipo[e.tipo] ||= []).push(e.datos);
   const inicio = (porTipo.inicio || [])[0];
   if (!inicio) return null;
   const pares = Object.keys(inicio.archivo_inicial);
-  const fechaBase = pares.map((p) => inicio.archivo_inicial[p].ultima_vela).sort().at(-1);
   const decisiones = (porTipo.decision || []).filter((d) => d.cartera === "V8");
   const fechasDecision = [...new Set(decisiones.map((d) => d.fecha))].sort();
+  const ejecuciones = porTipo.ejecucion || [];
 
-  // Capital al cierre por cartera: suma de los pares, solo fechas con todos los pares valorados.
-  const val = porTipo.valoracion || [];
-  const porFecha = new Map();
-  for (const v of val) {
-    if (!porFecha.has(v.fecha)) porFecha.set(v.fecha, {});
-    const f = porFecha.get(v.fecha);
-    (f[v.cartera] ||= {})[v.par] = v;
-  }
-  const fechas = [fechaBase, ...[...porFecha.keys()].sort().filter((f) => {
-    const x = porFecha.get(f);
-    return ["V8", "FIJO30"].every((c) => x[c] && pares.every((p) => x[c][p]));
-  })];
-  const serie = { V8: [], FIJO30: [], BH100: [] };
-  // Comprar y mantener al 100 %: compra en la apertura del primer ciclo, mismos costes (igual que en Python).
+  // Precio de apertura en el que se ejecutó cada decisión (está en `ejecucion` y en `sin_orden`).
   const aperturas = {};
-  for (const e of [...(porTipo.ejecucion || []), ...(porTipo.sin_orden || [])]) {
-    if (e.fecha_decision === fechasDecision[0]) aperturas[e.par] = e.apertura ?? e.precio_referencia;
+  for (const e of [...ejecuciones, ...(porTipo.sin_orden || [])]) {
+    (aperturas[e.fecha_decision] ||= {})[e.par] = e.apertura ?? e.precio_referencia;
   }
-  const unidadesBH = Object.keys(aperturas).length === pares.length
-    ? Object.fromEntries(pares.map((p) => [p, CAPITAL / pares.length / (aperturas[p] * (1 + costes.slippage) * (1 + costes.comision))]))
+  const completas = fechasDecision.filter((f) => pares.every((p) => aperturas[f] && aperturas[f][p] !== undefined));
+
+  const fechaBase = masUnDia(pares.map((p) => inicio.archivo_inicial[p].ultima_vela).sort().at(-1));
+  const fechas = [fechaBase];
+  const serie = { V8: [CAPITAL], FIJO30: [CAPITAL], BH100: [CAPITAL] };
+  const tenencias = {};
+  for (const c of ["V8", "FIJO30"]) for (const p of pares) tenencias[`${c}|${p}`] = [CAPITAL / pares.length, 0];
+  const unidadesBH = completas.length
+    ? Object.fromEntries(pares.map((p) => [p, CAPITAL / pares.length / (aperturas[completas[0]][p] * (1 + costes.slippage) * (1 + costes.comision))]))
     : null;
-  for (const f of fechas) {
-    if (f === fechaBase) { for (const c of ["V8", "FIJO30", "BH100"]) serie[c].push(CAPITAL); continue; }
-    const x = porFecha.get(f);
-    for (const c of ["V8", "FIJO30"]) serie[c].push(pares.reduce((s, p) => s + x[c][p].equity, 0));
-    serie.BH100.push(unidadesBH && f > fechasDecision[0]
-      ? pares.reduce((s, p) => s + unidadesBH[p] * x.V8[p].cierre, 0) : CAPITAL);
+  for (const f of completas) {
+    for (const e of ejecuciones) if (e.fecha_decision === f) tenencias[`${e.cartera}|${e.par}`] = [e.efectivo_despues, e.unidades_despues];
+    const a = aperturas[f];
+    fechas.push(masUnDia(f));
+    for (const c of ["V8", "FIJO30"]) serie[c].push(pares.reduce((s, p) => s + tenencias[`${c}|${p}`][0] + tenencias[`${c}|${p}`][1] * a[p], 0));
+    serie.BH100.push(pares.reduce((s, p) => s + unidadesBH[p] * a[p], 0));
   }
 
   const resumen = {};
@@ -134,23 +138,23 @@ function calcular(eventos, costes) {
       caidaActual: caidas.at(-1), caidaMaxima: maxima, caidas,
     };
   }
-  const ultimaFecha = fechas.at(-1);
+  const ultima = completas.at(-1);
   for (const c of ["V8", "FIJO30"]) {
-    const x = porFecha.get(ultimaFecha);
-    const invertido = x ? pares.reduce((s, p) => s + x[c][p].unidades * x[c][p].cierre, 0) : 0;
+    const invertido = ultima ? pares.reduce((s, p) => s + tenencias[`${c}|${p}`][1] * aperturas[ultima][p], 0) : 0;
     resumen[c].exposicion = invertido / resumen[c].equity;
-    const ops = (porTipo.ejecucion || []).filter((o) => o.cartera === c);
+    const ops = ejecuciones.filter((o) => o.cartera === c && ultima && o.fecha_decision <= ultima);
     resumen[c].ordenes = ops.length;
     resumen[c].comisiones = ops.reduce((s, o) => s + o.comision, 0);
     resumen[c].slippage = ops.reduce((s, o) => s + o.slippage, 0);
   }
-  resumen.BH100.exposicion = unidadesBH && ultimaFecha > fechasDecision[0] ? 1 : 0;
+  resumen.BH100.exposicion = ultima ? 1 : 0;
 
   return {
-    pares, fechas, serie, resumen, fechasDecision, dia: fechasDecision.length,
-    ultimaDecision: fechasDecision.at(-1),
+    pares, fechas, serie, resumen, fechasDecision,
+    dia: ultima ? fechasDecision.indexOf(ultima) + 1 : 0,
+    ultimaDecision: ultima,
     decisiones: (porTipo.decision || []),
-    ejecuciones: porTipo.ejecucion || [],
+    ejecuciones,
     velasPerdidas: porTipo.vela_perdida || [],
     alertas: porTipo.alerta || [],
     paradas: porTipo.parada || [],
@@ -182,7 +186,7 @@ function tarjetas(c) {
   }
   el("dia").textContent = `Día ${c.dia}`;
   const fin = c.fin ? " · experimento terminado" : "";
-  el("actualizado").textContent = `Cierre del ${c.ultimaDecision ? fechaLarga(c.ultimaDecision) : "—"} · último evento ${c.ultimoTs.replace("T", " ").replace("Z", " UTC")}${fin}`;
+  el("actualizado").textContent = `${c.ultimaDecision ? `Valores tras la apertura del ${fechaLarga(c.fechas.at(-1))} (decisión del cierre del ${fechaLarga(c.ultimaDecision)})` : "Aún sin decisiones"} · último evento ${c.ultimoTs.replace("T", " ").replace("Z", " UTC")}${fin}`;
 }
 
 function avisos(c) {
@@ -287,7 +291,7 @@ function mostrarCursor(i, evento) {
   }
   if (i === null) { tt.hidden = true; return; }
   const c = graficos[0].c;
-  tt.replaceChildren(crear("div", { clase: "fecha", texto: `Cierre del ${fechaLarga(c.fechas[i])}${i === 0 ? " (día 0)" : ""}` }));
+  tt.replaceChildren(crear("div", { clase: "fecha", texto: `Apertura del ${fechaLarga(c.fechas[i])}${i === 0 ? " (día 0)" : ""}` }));
   for (const cart of CARTERAS) {
     const v = c.serie[cart.id][i];
     const caida = c.resumen[cart.id].caidas[i];
@@ -343,10 +347,10 @@ function dibujar(c) {
 
 function tablaCapital(c) {
   const t = el("tabla-capital");
-  const cab = crear("tr", {}, [crear("th", { texto: "Cierre" }), ...CARTERAS.flatMap((k) => [crear("th", { texto: k.corto }), crear("th", { texto: "Caída" })])]);
+  const cab = crear("tr", {}, [crear("th", { texto: "Apertura" }), ...CARTERAS.flatMap((k) => [crear("th", { texto: k.corto }), crear("th", { texto: "Caída" })])]);
   const filas = c.fechas.map((f, i) => crear("tr", {}, [crear("td", { texto: fechaLarga(f) + (i === 0 ? " (día 0)" : "") }),
     ...CARTERAS.flatMap((k) => [crear("td", { texto: eur(c.serie[k.id][i], 2) }), crear("td", { texto: pct(c.resumen[k.id].caidas[i]) })])]));
-  t.replaceChildren(crear("caption", { texto: "Capital al cierre de cada día (incluye comisiones y slippage)" }), crear("thead", {}, [cab]), crear("tbody", {}, filas.reverse()));
+  t.replaceChildren(crear("caption", { texto: "Valor de cada cartera tras ejecutar las órdenes del día, a precio de apertura (incluye comisiones y slippage)" }), crear("thead", {}, [cab]), crear("tbody", {}, filas.reverse()));
 }
 
 function decisiones(c) {

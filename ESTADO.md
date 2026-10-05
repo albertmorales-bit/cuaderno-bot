@@ -1,6 +1,16 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-04, fin de la Fase 7 (todo listo para el día 0; faltan los pasos del usuario).
+Última actualización: 2026-10-05 · **experimento en marcha (día 1 de 90).**
+
+## Experimento en vivo
+
+- Repositorio público: https://github.com/albertmorales-bit/cuaderno-bot ·
+  web: https://albertmorales-bit.github.io/cuaderno-bot/
+- Pre-registro: tag `v1.0-preregistro`, SHA-256
+  `0bb34ef8951ef8814cb6ff3f451f7a39657217276479cefaea9ef84658de5354`.
+- Día 0: 2026-10-04 18:24 UTC. Día 1: decisión del cierre del 04/10, órdenes
+  en la apertura del 05/10 (la V8 entra al 100 % en BTC y ETH).
+- Cambios posteriores al pre-registro: `CAMBIOS.md` (fe de erratas 1).
 
 ## Hecho
 
@@ -80,20 +90,17 @@ señal de la v4 (ya ejecutaba en la apertura siguiente con el ATR anterior).
 
 ## Falta
 
-- Pasos del usuario (`GUIA_PUBLICACION.md`), pre-registro y día 0; 4 (validación dura), 5 (motor en vivo), 6 (salidas X),
-  7 (web de transparencia).
-- El cuaderno de Colab es el de la v4: queda como histórico. Habrá que hacer
-  uno nuevo que use los `.py` del repositorio.
+- Seguimiento diario de los 90 días (publicación manual en X con lo que deja
+  el bot en `vivo/diario/`) y hilos semanales.
+- Informe final al día 90 con lo pre-registrado (sección 4 de `PREREGISTRO.md`).
+- El cuaderno de Colab es el de la v4: queda como histórico. Si hace falta, uno
+  nuevo que use los `.py` del repositorio.
+- Reserva final (2024-07 → 2026-05) sin abrir, guardada para una versión futura.
 
 ## Decisiones abiertas (del usuario)
 
-1. Pasos de `GUIA_PUBLICACION.md` (email noreply, clave de firma, repositorio, rulesets).
-2. Rellenar `publicacion.json` con el usuario de GitHub.
-
-Cerradas el 2026-10-04: diario, BTC/ETH en EUR, solo largos en contado, Kraken
-taker 0,80 %, tramos de `VALIDACION.md`, V8 (D-023), sin Fase 3 (D-027),
-criterios v1 (D-028), paper trading con V8 NO APTO y FIJO30 (D-031), reserva
-cerrada, reglas de seguridad (D-034) y riesgo del día 1 aceptados.
+- Ninguna. Si GitHub dejara un día sin ejecutar (vela perdida), valorar añadir
+  más horarios de reintento al workflow, documentándolo en `CAMBIOS.md`.
 
 ## Cómo retomar
 

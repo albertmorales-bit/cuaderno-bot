@@ -55,7 +55,7 @@ construir una versión nueva desde las APIs públicas:
 .venv\Scripts\python scripts\informe_datos.py --version v2
 ```
 
-Publicar y arrancar: [`GUIA_PUBLICACION.md`](GUIA_PUBLICACION.md).
+Publicar y arrancar: [`GUIA_PUBLICACION.md`](GUIA_PUBLICACION.md). Cambios posteriores al pre-registro: [`CAMBIOS.md`](CAMBIOS.md).
 
 Ver la web con datos de demostración (sintéticos) en local:
 
