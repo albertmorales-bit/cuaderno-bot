@@ -84,9 +84,9 @@ cambios.
 
 | Archivo | SHA-256 anterior (cambio 2) | SHA-256 nuevo |
 |---|---|---|
-| `web/index.html` | `4393b4067c58995f46c04b3df48aa99797c5f5d6677891db3633799bfcf2b9b0` | `7dd63523abb5592cf24264fa62ada5b974842b50caec152acde12eed57c4f2d6` |
-| `web/styles.css` | `746b3ad3b96566f354ccbd91d3680105a90271cb6904815ae5957509ca5ddbc6` | `a7122434c9d7a2ea9018fd14dcba096dbc71ed62089ab403c3ad4950efc9b2a2` |
-| `web/app.js` | `c72d3f37ed4fd2ee244c8f16a2ffd674abf422c3bf5b0e8f0976c0f159edc73e` | `80fb6be6e30cab4e114198c69ef6bc9db52ed5ff635d600682360209d5ee7049` |
+| `web/index.html` | `4393b4067c58995f46c04b3df48aa99797c5f5d6677891db3633799bfcf2b9b0` | `8c5a97b251ad3e9b69ed4c30742dfe210e89caba855bc1bb07eec6ff69455efe` |
+| `web/styles.css` | `746b3ad3b96566f354ccbd91d3680105a90271cb6904815ae5957509ca5ddbc6` | `c0624360b1e78812432439280dda02b891b529d640bd6bdede9d6760d87d9153` |
+| `web/app.js` | `c72d3f37ed4fd2ee244c8f16a2ffd674abf422c3bf5b0e8f0976c0f159edc73e` | `b4fbb5dd1dd5b766028fe4d60f1b2b0dc0267d7de7da49c2140a0a146c9d32b9` |
 
 ## Observaciones operativas (sin cambios en ningún archivo)
 
