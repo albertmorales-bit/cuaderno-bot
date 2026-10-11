@@ -1,0 +1,24 @@
+Semana 1 (día 7 de 90) del bot con 10.000 € ficticios. Hilo con todo, también lo malo.
+
+---
+
+Capital tras 7 días:
+V8: 9.379 € (-6,2 %), caída máx. 7,4 %
+30 % fijo: 9.803 € (-2,0 %)
+Comprar y mantener: 9.349 € (-6,5 %), caída máx. 7,9 %
+
+---
+
+Esta semana la V8 hizo 3 órdenes (compra de BTC (entrada), compra de ETH (entrada), venta de ETH (reajuste)). Comisiones de la semana: 92,90 €; acumuladas: 92,90 €. Exposición actual: 82 %.
+
+---
+
+Régimen al cierre: BTC: tendencia alcista, volatilidad media; ETH: tendencia alcista, volatilidad baja. La V8 no cambia de reglas según el régimen: solo lo registra.
+
+---
+
+Integridad: 113 eventos encadenados con SHA-256, 0 velas perdidas. Hash del día: 6241905abe805a53…
+
+---
+
+Recordatorio: la V8 salió NO APTO en mi validación fuera de muestra y 90 días no demuestran nada. Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.
