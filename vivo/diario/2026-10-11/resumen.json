@@ -1,0 +1,92 @@
+{
+  "fecha": "2026-10-11T00:00:00Z",
+  "fecha_apertura": "2026-10-12T00:00:00Z",
+  "dia": 8,
+  "carteras": {
+    "V8": {
+      "equity": 9453.27626599358,
+      "resultado_dia": 74.30765463409989,
+      "resultado_dia_pct": 0.007922795961178508,
+      "acumulado_pct": -0.054672373400642016,
+      "caida_actual": 0.054672373400642016,
+      "caida_maxima": 0.07358600214257205,
+      "exposicion": 0.8224297296384526,
+      "posiciones": {
+        "BTC/EUR": {
+          "unidades": 0.06445161,
+          "valor": 4814.3805831360005
+        },
+        "ETH/EUR": {
+          "unidades": 1.30877321,
+          "valor": 2960.2748605027
+        }
+      },
+      "ordenes_hoy": [],
+      "ordenes_total": 3,
+      "salidas_total": 0,
+      "comisiones": 92.90234268593677,
+      "slippage": 11.604575963482207
+    },
+    "FIJO30": {
+      "equity": 9831.12264233275,
+      "resultado_dia": 28.11875066510038,
+      "resultado_dia_pct": 0.002868381057055558,
+      "acumulado_pct": -0.016887735766724976,
+      "caida_actual": 0.016887735766724976,
+      "caida_maxima": 0.02384763265695511,
+      "exposicion": 0.2907242809801336,
+      "posiciones": {
+        "BTC/EUR": {
+          "unidades": 0.01950965,
+          "valor": 1457.32403184
+        },
+        "ETH/EUR": {
+          "unidades": 0.61932031,
+          "valor": 1400.8220295796998
+        }
+      },
+      "ordenes_hoy": [],
+      "ordenes_total": 2,
+      "salidas_total": 0,
+      "comisiones": 24.023995389578985,
+      "slippage": 2.9999994242728567
+    },
+    "BH100": {
+      "equity": 9442.100955146649,
+      "resultado_dia": 92.89241016293818,
+      "resultado_dia_pct": 0.009935858176228107,
+      "acumulado_pct": -0.05578990448533516,
+      "caida_actual": 0.05578990448533516,
+      "caida_maxima": 0.07878244846648863,
+      "exposicion": 1.0,
+      "posiciones": {},
+      "ordenes_hoy": [],
+      "ordenes_total": 0,
+      "salidas_total": 0,
+      "comisiones": 0.0,
+      "slippage": 0.0
+    }
+  },
+  "regimen": {
+    "BTC/EUR": {
+      "fuerza": "fuerte",
+      "tendencia": "alcista",
+      "volatilidad": "media"
+    },
+    "ETH/EUR": {
+      "fuerza": "debil",
+      "tendencia": "alcista",
+      "volatilidad": "baja"
+    }
+  },
+  "motivo": {
+    "BTC/EUR": "3 de 3 sistemas en tendencia (20/10 sí, 55/20 sí, 100/50 sí); volatilidad por debajo del objetivo, escala 1,00; exposición objetivo 100 %",
+    "ETH/EUR": "2 de 3 sistemas en tendencia (20/10 no, 55/20 sí, 100/50 sí); volatilidad de 30 días 43 %, escala 0,93; exposición objetivo 62 %"
+  },
+  "velas_perdidas": 0,
+  "avisos": [],
+  "parada": false,
+  "hash_dia": "90aecafba7c03ec016504e8114793bf00d0b57fdeed111cd7b0cb3a042f3bc88",
+  "lineas_registro": 129,
+  "aviso": "Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada."
+}
