@@ -1,0 +1,24 @@
+Semana 3 (día 21 de 90) del bot con 10.000 € ficticios. Hilo con todo, también lo malo.
+
+---
+
+Capital tras 21 días:
+V8: 9.084 € (-9,2 %), caída máx. 9,2 %
+30 % fijo: 9.684 € (-3,2 %)
+Comprar y mantener: 8.957 € (-10,4 %), caída máx. 10,4 %
+
+---
+
+Esta semana la V8 hizo 0 órdenes (ninguna). Comisiones de la semana: 0,00 €; acumuladas: 92,90 €. Exposición actual: 82 %.
+
+---
+
+Régimen al cierre: BTC: tendencia alcista, volatilidad baja; ETH: tendencia alcista, volatilidad baja. La V8 no cambia de reglas según el régimen: solo lo registra.
+
+---
+
+Integridad: 337 eventos encadenados con SHA-256, 0 velas perdidas. Hash del día: 208c9b0560d5df54…
+
+---
+
+Recordatorio: la V8 salió NO APTO en mi validación fuera de muestra y 90 días no demuestran nada. Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.
