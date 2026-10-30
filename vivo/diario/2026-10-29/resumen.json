@@ -1,0 +1,125 @@
+{
+  "fecha": "2026-10-29T00:00:00Z",
+  "fecha_apertura": "2026-10-30T00:00:00Z",
+  "dia": 26,
+  "carteras": {
+    "V8": {
+      "equity": 8745.081586776541,
+      "resultado_dia": -394.6377458243387,
+      "resultado_dia_pct": -0.043178322163207716,
+      "acumulado_pct": -0.1254918413223458,
+      "caida_actual": 0.1254918413223458,
+      "caida_maxima": 0.1254918413223458,
+      "exposicion": 0.1709381085880769,
+      "posiciones": {
+        "BTC/EUR": {
+          "unidades": 0.021483880000000004,
+          "valor": 1494.8677058920002
+        }
+      },
+      "ordenes_hoy": [
+        {
+          "cartera": "V8",
+          "comision": 23.893948728261144,
+          "efectivo_despues": 2962.8497062444526,
+          "exposicion_antes": 0.9999999857423059,
+          "exposicion_objetivo": 0.3333333333333333,
+          "fecha": "2026-10-30T00:00:00Z",
+          "fecha_decision": "2026-10-29T00:00:00Z",
+          "funding": 0.0,
+          "lado": "venta",
+          "motivo": "reajuste",
+          "par": "BTC/EUR",
+          "precio_efectivo": 69511.3191,
+          "precio_referencia": 69580.9,
+          "slippage": 2.989733324357036,
+          "unidades": 0.04296773,
+          "unidades_despues": 0.021483880000000004
+        },
+        {
+          "cartera": "V8",
+          "comision": 21.038253356655474,
+          "efectivo_despues": 4287.364174640087,
+          "exposicion_antes": 0.6106223169366118,
+          "exposicion_objetivo": 0.0,
+          "fecha": "2026-10-30T00:00:00Z",
+          "fecha_decision": "2026-10-29T00:00:00Z",
+          "funding": 0.0,
+          "lado": "venta",
+          "motivo": "salida",
+          "par": "ETH/EUR",
+          "precio_efectivo": 2009.34864,
+          "precio_referencia": 2011.36,
+          "slippage": 2.632414083665558,
+          "unidades": 1.30877321,
+          "unidades_despues": 0.0
+        }
+      ],
+      "ordenes_total": 5,
+      "salidas_total": 1,
+      "comisiones": 137.8345447708534,
+      "slippage": 17.2267233715048
+    },
+    "FIJO30": {
+      "equity": 9576.151685319648,
+      "resultado_dia": -126.83596716340071,
+      "resultado_dia_pct": -0.013071846703931689,
+      "acumulado_pct": -0.04238483146803518,
+      "caida_actual": 0.04238483146803518,
+      "caida_maxima": 0.04238483146803518,
+      "exposicion": 0.27183937660441376,
+      "posiciones": {
+        "BTC/EUR": {
+          "unidades": 0.01950965,
+          "valor": 1357.499005685
+        },
+        "ETH/EUR": {
+          "unidades": 0.61932031,
+          "valor": 1245.6760987215998
+        }
+      },
+      "ordenes_hoy": [],
+      "ordenes_total": 2,
+      "salidas_total": 0,
+      "comisiones": 24.023995389578985,
+      "slippage": 2.9999994242728567
+    },
+    "BH100": {
+      "equity": 8599.785215605149,
+      "resultado_dia": -419.01217722372894,
+      "resultado_dia_pct": -0.04645987252767181,
+      "acumulado_pct": -0.1400214784394851,
+      "caida_actual": 0.1400214784394851,
+      "caida_maxima": 0.1400214784394851,
+      "exposicion": 1.0,
+      "posiciones": {},
+      "ordenes_hoy": [],
+      "ordenes_total": 0,
+      "salidas_total": 0,
+      "comisiones": 0.0,
+      "slippage": 0.0
+    }
+  },
+  "regimen": {
+    "BTC/EUR": {
+      "fuerza": "debil",
+      "tendencia": "alcista",
+      "volatilidad": "baja"
+    },
+    "ETH/EUR": {
+      "fuerza": "debil",
+      "tendencia": "alcista",
+      "volatilidad": "baja"
+    }
+  },
+  "motivo": {
+    "BTC/EUR": "1 de 3 sistemas en tendencia (20/10 no, 55/20 no, 100/50 sí); volatilidad por debajo del objetivo, escala 1,00; exposición objetivo 33 %",
+    "ETH/EUR": "0 de 3 sistemas en tendencia (20/10 no, 55/20 no, 100/50 no); volatilidad por debajo del objetivo, escala 1,00; exposición objetivo 0 %"
+  },
+  "velas_perdidas": 0,
+  "avisos": [],
+  "parada": false,
+  "hash_dia": "482f51f9e2154aeb4270a0cfe2e666f9979a6b6e1052fc91cc014ab297ad5b21",
+  "lineas_registro": 417,
+  "aviso": "Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada."
+}
