@@ -1,18 +1,18 @@
 {
-  "ahora": "2026-11-07T05:57:13Z",
+  "ahora": "2026-11-08T05:59:33Z",
   "ciclos": [
     {
       "par": "BTC/EUR",
-      "fecha": "2026-11-06T00:00:00Z",
+      "fecha": "2026-11-07T00:00:00Z",
       "completado": true
     },
     {
       "par": "ETH/EUR",
-      "fecha": "2026-11-06T00:00:00Z",
+      "fecha": "2026-11-07T00:00:00Z",
       "completado": true
     }
   ],
-  "hash_dia": "4f4f8c8403148210e65b46e40e57edccdb73b68690f54fb842b0cdb2d31418b6",
-  "salidas": "vivo/diario/2026-11-06",
-  "dia": 34
+  "hash_dia": "926496a2cf89af156556807e2664d5c69e8aff2ee3a62a01cb849c9cf66343c8",
+  "salidas": "vivo/diario/2026-11-07",
+  "dia": 35
 }
