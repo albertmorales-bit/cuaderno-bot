@@ -1,0 +1,7 @@
+Bot en paper trading, día 39 de 90.
+
+V8 8.682 € | hoy +0,16 % | caída 13,2 %
+30 % fijo 9.420 €
+
+Sin órdenes hoy; la V8 tiene invertido un 16 %.
+Registro encadenado, hash 74d750fa
