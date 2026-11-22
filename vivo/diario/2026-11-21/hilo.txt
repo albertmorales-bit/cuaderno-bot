@@ -1,0 +1,24 @@
+Semana 7 (día 49 de 90) del bot con 10.000 € ficticios. Hilo con todo, también lo malo.
+
+---
+
+Capital tras 49 días:
+V8: 8.626 € (-13,7 %), caída máx. 13,7 %
+30 % fijo: 8.996 € (-10,0 %)
+Comprar y mantener: 6.682 € (-33,2 %), caída máx. 35,1 %
+
+---
+
+Esta semana la V8 hizo 0 órdenes (ninguna). Comisiones de la semana: 0,00 €; acumuladas: 148,93 €. Exposición actual: 0 %.
+
+---
+
+Régimen al cierre: BTC: tendencia bajista, volatilidad alta; ETH: tendencia bajista, volatilidad media. La V8 no cambia de reglas según el régimen: solo lo registra.
+
+---
+
+Integridad: 785 eventos encadenados con SHA-256, 0 velas perdidas. Hash del día: a87fd41a4a1c77af…
+
+---
+
+Recordatorio: la V8 salió NO APTO en mi validación fuera de muestra y 90 días no demuestran nada. Dinero ficticio, no es asesoramiento financiero, resultados pasados no garantizan nada.
